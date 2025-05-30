@@ -1,0 +1,36 @@
+{
+  "name": "unthread-webhook-server",
+  "version": "1.0.0",
+  "description": "A Node.js server application that receives webhook events from Unthread.io and queues them for processing.",
+  "license": "AGPL-3.0",
+  "author": "WG Tech Labs <opensource@wgtechlabs.com> (https://wgtechlabs.com)",
+  "contributors": [
+    "Waren Gonzaga <opensource@warengonzaga.com> (https://warengonzaga.com)"
+  ],
+  "main": "dist/app.js",
+  "scripts": {
+    "preinstall": "only-allow yarn",
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "nodemon --exec ts-node src/app.ts",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wgtechlabs/log-engine": "1.0.3",
+    "dotenv": "^16.4.0",
+    "express": "^4.21.0",
+    "express-validator": "^7.2.0",
+    "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.26",
+    "axios": "^1.7.0",
+    "nodemon": "^3.1.10",
+    "only-allow": "1.2.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "yarn@1.22.19"
+}

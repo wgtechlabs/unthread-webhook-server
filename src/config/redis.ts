@@ -34,11 +34,11 @@ const redisConfig = parseRedisConfig();
 const client = createClient({ url: redisConfig.url });
 
 client.on('error', (err?: Error) => {
-    LogEngine.error(`Redis error: ${err}`);
+    LogEngine.error(`Redis connection error: ${err}`);
 });
 
 client.on('ready', () => {
-    LogEngine.info('Redis client ready');
+    LogEngine.info('Redis connection established');
 });
 
 export {

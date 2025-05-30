@@ -16,12 +16,12 @@ export class WebhookController {
 
             // Handle URL verification event (required by Unthread)
             if (event === 'url_verification') {
-                LogEngine.info('URL verification event received');
+                LogEngine.debug('URL verification event processed');
                 return res.status(200).json({ message: 'URL verified' });
             }
 
-            // Log the received event for debugging
-            LogEngine.debug(`Received event: ${event} with ID: ${eventId}`);
+            // Log event processing for debugging
+            LogEngine.debug(`Processing ${event} event (ID: ${eventId})`);
 
             // Validate the event structure
             const validationResult = this.webhookService.validateEvent(req.body);

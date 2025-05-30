@@ -38,7 +38,7 @@ export class WebhookService {
         // Publish the event to the Redis queue
         await this.redisService.publishEvent(transformedEvent);
         
-        LogEngine.info(`Processed event: ${event.event} with ID: ${event.eventId}`);
+        LogEngine.debug(`Event processed and queued: ${event.event} (${event.eventId})`);
     }
 
     private transformEvent(unthreadEvent: UnthreadWebhookEvent): RedisQueueMessage {

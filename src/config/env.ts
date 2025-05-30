@@ -43,7 +43,7 @@ function validateEnvironment(): void {
         throw new Error(errorMsg);
     }
 
-    LogEngine.info('All required environment variables are present and valid');
+    LogEngine.debug('All required environment variables are present and valid');
 }
 
 function loadConfig(): IEnvConfig {
@@ -70,12 +70,13 @@ function loadConfig(): IEnvConfig {
     const redisUrl = process.env.REDIS_URL!;
     const unthreadWebhookSecret = process.env.UNTHREAD_WEBHOOK_SECRET!;
     
-    const unthreadQueueName = `${targetPlatform}-webhook-queue`;
+    const unthreadQueueName = 'unthread-events';
 
-    LogEngine.info(`Environment loaded successfully`);
-    LogEngine.info(`Running in ${nodeEnv} mode on port ${port}`);
-    LogEngine.info(`Target platform: ${targetPlatform}`);
-    LogEngine.info(`Using hardcoded queue name: ${unthreadQueueName}`);
+    // Log configuration summary for production
+    LogEngine.info('Environment configuration loaded successfully');
+    
+    // Debug-only detailed configuration (only visible in development)
+    LogEngine.debug(`Config: ${nodeEnv} mode | Port: ${port} | Platform: ${targetPlatform} | Queue: ${unthreadQueueName}`);
 
     return {
         nodeEnv,

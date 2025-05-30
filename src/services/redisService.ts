@@ -14,14 +14,14 @@ export class RedisService {
         try {
             // Check if already connected
             if (this.client.isOpen) {
-                LogEngine.info('Redis already connected');
+                LogEngine.debug('Redis connection already established');
                 return;
             }
 
             await this.client.connect();
-            LogEngine.info('Connected to Redis');
+            // Connection success is logged by the 'ready' event handler in redis.ts
         } catch (err) {
-            LogEngine.error(`Redis connection error: ${err}`);
+            LogEngine.error(`Redis connection failed: ${err}`);
             throw err;
         }
     }
@@ -36,7 +36,7 @@ export class RedisService {
         try {
             // Use Redis LIST for FIFO queue (LPUSH + BRPOP pattern)
             const result = await this.client.lPush(queueName, JSON.stringify(event));
-            LogEngine.debug(`Event queued to ${queueName}: ${event.data?.eventId || 'unknown'}`);
+            LogEngine.debug(`Event queued: ${event.data?.eventId || 'unknown'} -> ${queueName}`);
             return result;
         } catch (err) {
             LogEngine.error(`Error publishing event to queue: ${err}`);

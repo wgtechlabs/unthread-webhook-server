@@ -40,9 +40,10 @@ app.post('/unthread-webhook',
 );
 
 app.listen(port, () => {
-    LogEngine.info(`Unthread webhook server is running on port ${port}`);
-    LogEngine.info(`Health check available at: http://localhost:${port}/health`);
-    LogEngine.info(`Webhook endpoint: http://localhost:${port}/unthread-webhook`);
-    LogEngine.debug(`Server started in ${config.nodeEnv} mode`);
-    LogEngine.debug(`Target platform: ${config.targetPlatform}`);
+    // Production-friendly startup message
+    LogEngine.info(`Unthread webhook server started on port ${port}`);
+    
+    // Debug-only detailed information
+    LogEngine.debug(`Endpoints: /health | /unthread-webhook`);
+    LogEngine.debug(`Mode: ${config.nodeEnv} | Platform: ${config.targetPlatform}`);
 });

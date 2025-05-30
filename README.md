@@ -1,9 +1,6 @@
 # Unthread Webhook Server 🔗⚡ [![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs)
 
-[![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/LICENSE)
-[![release](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/releases)
-[![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers)
-[![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs)
+[![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/LICENSE) [![release](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs)
 
 A **production-ready Node.js webhook server** specifically engineered for Unthread.io integration - built with TypeScript, Express.js, and Redis for reliable webhook event processing. This server implements proper HMAC-SHA256 signature verification, handles URL verification, and queues events for asynchronous processing with enterprise-grade security and error handling.
 
@@ -33,7 +30,7 @@ I created Unthread Webhook Server because every developer deserves a **reliable,
 1. **Webhook Reception**: The server receives POST requests from Unthread.io at the `/unthread-webhook` endpoint with proper CORS and security headers
 2. **Signature Verification**: Each incoming request is validated using HMAC-SHA256 signature verification against your Unthread webhook secret
 3. **Event Processing**: Valid webhook events are parsed, validated, and processed according to Unthread's event structure requirements
-4. **Redis Queuing**: Events are automatically published to a Redis queue (`${TARGET_PLATFORM}-webhook-queue`) for asynchronous processing by your application
+4. **Redis Queuing**: Events are automatically published to a Redis queue (`unthread-events`) for asynchronous processing by your application
 5. **Error Handling**: Comprehensive error handling ensures failed requests are logged and properly responded to, maintaining webhook reliability
 
 Ready to streamline your Unthread.io integration? Get started in seconds with our [simple installation](#📦-installation)!
@@ -79,7 +76,7 @@ REDIS_URL=redis://localhost:6379
 TARGET_PLATFORM=discord
 ```
 
-> **Note**: The Redis queue name is automatically generated as `${TARGET_PLATFORM}-webhook-queue` for consistency.
+> **Note**: The Redis queue name is hardcoded as `unthread-events` for consistency across all deployments.
 
 ### 3. Start Redis
 

@@ -72,8 +72,8 @@ function loadConfig(): IEnvConfig {
     
     const unthreadQueueName = 'unthread-events';
 
-    // Log configuration summary for production
-    LogEngine.info('Environment configuration loaded successfully');
+    // Log configuration summary for production - always visible
+    LogEngine.log('Environment configuration loaded successfully');
     
     // Debug-only detailed configuration (only visible in development)
     LogEngine.debug(`Config: ${nodeEnv} mode | Port: ${port} | Platform: ${targetPlatform} | Queue: ${unthreadQueueName}`);

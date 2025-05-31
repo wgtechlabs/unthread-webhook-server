@@ -38,7 +38,7 @@ client.on('error', (err?: Error) => {
 });
 
 client.on('ready', () => {
-    LogEngine.info('Redis connection established');
+    LogEngine.log('Redis connection established');
 });
 
 export {

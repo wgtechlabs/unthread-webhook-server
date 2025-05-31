@@ -40,8 +40,8 @@ app.post('/unthread-webhook',
 );
 
 app.listen(port, () => {
-    // Production-friendly startup message
-    LogEngine.info(`Unthread webhook server started on port ${port}`);
+    // Production-friendly startup message - always visible
+    LogEngine.log(`Unthread webhook server started on port ${port}`);
     
     // Debug-only detailed information
     LogEngine.debug(`Endpoints: /health | /unthread-webhook`);

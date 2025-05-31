@@ -48,7 +48,7 @@ export class RedisService {
         try {
             if (this.client.isOpen) {
                 await this.client.quit();
-                LogEngine.info('Redis connection closed');
+                LogEngine.log('Redis connection closed');
             }
         } catch (err) {
             LogEngine.error(`Error closing Redis connection: ${err}`);

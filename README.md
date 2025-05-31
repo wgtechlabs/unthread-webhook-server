@@ -8,9 +8,9 @@ A **production-ready Node.js webhook server** specifically engineered for Unthre
 
 ## ❣️ Motivation
 
-Picture this: You're building an amazing Discord bot or customer support system that integrates with Unthread.io, but you're spending more time wrestling with webhook verification, event processing, and Redis queue management than actually building features. Sound familiar? I've been there too.
+Ever stared at webhook documentation wondering if you're implementing signature verification correctly? Or worried your event processing might miss critical messages? I built this because webhooks shouldn't be scary.
 
-I created Unthread Webhook Server because every developer deserves a **reliable, secure, and battle-tested foundation** for processing Unthread.io webhooks. No more manual HMAC verification, no more fragile event handling, no more reinventing the wheel. Just clean, TypeScript-powered webhook processing that scales with your application and keeps your users happy.
+Transform webhook integration from a security nightmare into confident, production-ready infrastructure. Skip the hours of HMAC debugging, Redis queue setup, and "did I handle that edge case?" moments. Just plug in your secrets and watch events flow reliably to your application - because great integrations should feel effortless, not exhausting.
 
 ## ✨ Key Features
 

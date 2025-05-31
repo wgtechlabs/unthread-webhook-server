@@ -52,6 +52,23 @@ export interface MessageEvent extends UnthreadWebhookEvent {
   };
 }
 
+// Webhook source types
+export type WebhookSource = 'dashboard' | 'target_platform' | 'unknown';
+
+// Platform source for comparison (based on ENV target platform)
+export type PlatformSource = 'dashboard' | string; // string allows for dynamic target platform names
+
+// Webhook comparison record for database storage
+export interface WebhookComparisonRecord {
+  id?: number;
+  conversationId: string;  // Ticket ID
+  eventId: string;         // Message ID within ticket
+  botName: string;
+  sentByUserId: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // Union type for all webhook events
 export type WebhookEvent = UrlVerificationEvent | ConversationEvent | MessageEvent;
 
@@ -65,6 +82,8 @@ export interface RedisQueueMessage {
   platform: 'unthread';
   targetPlatform: string;
   type: UnthreadEventType;
+  webhookSource?: WebhookSource;
+  platformSource?: PlatformSource; // New field for dashboard vs target platform
   data: {
     originalEvent: UnthreadEventType;
     eventId: string;
@@ -83,6 +102,13 @@ export interface EnvConfig {
   unthreadQueueName: string;
   redisUrl: string;
   unthreadWebhookSecret: string;
+  // PostgreSQL configuration
+  databaseUrl: string;
+  databaseHost?: string | undefined;
+  databasePort?: number | undefined;
+  databaseName?: string | undefined;
+  databaseUser?: string | undefined;
+  databasePassword?: string | undefined;
 }
 
 // Redis configuration

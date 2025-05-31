@@ -134,6 +134,7 @@ Thumbs.db
 
 # AI context documentation (not for repo)
 docs/
+ai_context/
 
 # Enforce Yarn usage - ignore npm lockfile
 package-lock.json

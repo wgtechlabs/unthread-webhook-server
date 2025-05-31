@@ -1,52 +1,57 @@
 import { LogEngine } from '@wgtechlabs/log-engine';
 import { RedisService } from './redisService';
+import { DatabaseService } from './databaseService';
 import { config } from '../config/env';
-import { UnthreadWebhookEvent, RedisQueueMessage, UnthreadEventType, ValidationResult } from '../types';
+import { UnthreadWebhookEvent, RedisQueueMessage, UnthreadEventType, ValidationResult, WebhookSource } from '../types';
 
 export class WebhookService {
     private redisService: RedisService;
+    private databaseService: DatabaseService;
 
     constructor() {
         this.redisService = new RedisService();
-        // Ensure Redis connection is established
-        this.initializeRedis();
+        this.databaseService = new DatabaseService();
+        this.initializeServices();
     }
 
-    private async initializeRedis(): Promise<void> {
+    private async initializeServices(): Promise<void> {
         try {
             await this.redisService.connect();
+            await this.databaseService.connect();
         } catch (error) {
-            LogEngine.error(`Failed to initialize Redis connection: ${error}`);
-            // Don't throw here to prevent app crash, Redis will retry connection
+            LogEngine.error(`Failed to initialize services: ${error}`);
         }
     }
 
     async processEvent(event: UnthreadWebhookEvent): Promise<void> {
-        // Validate the event structure and content
         if (!this.validateEvent(event).isValid) {
             throw new Error('Invalid event structure');
         }
 
-        // Ensure Redis is connected before processing
         if (!this.redisService.isConnected()) {
             await this.redisService.connect();
         }
+        if (!this.databaseService.isConnectionHealthy()) {
+            await this.databaseService.connect();
+        }
 
-        // Transform the Unthread event to our system's event structure
-        const transformedEvent = this.transformEvent(event);
+        const webhookSource = await this.detectWebhookSourceWithComparison(event);
+        const transformedEvent = this.transformEvent(event, webhookSource);
 
-        // Publish the event to the Redis queue
+        if (transformedEvent.webhookSource) {
+            LogEngine.info(`Webhook source detected: ${transformedEvent.webhookSource} for event ${event.eventId}`);
+        }
+
         await this.redisService.publishEvent(transformedEvent);
-        
-        LogEngine.debug(`Event processed and queued: ${event.event} (${event.eventId})`);
+        LogEngine.debug(`Event processed and queued: ${event.event} (${event.eventId}) from ${transformedEvent.webhookSource || 'unknown'} source`);
     }
 
-    private transformEvent(unthreadEvent: UnthreadWebhookEvent): RedisQueueMessage {
-        // Transform Unthread event to match our system architecture
+    private transformEvent(unthreadEvent: UnthreadWebhookEvent, webhookSource: WebhookSource): RedisQueueMessage {
         return {
             platform: "unthread",
             targetPlatform: config.targetPlatform,
             type: this.mapEventType(unthreadEvent.event),
+            webhookSource,
             data: {
                 ...unthreadEvent.data,
                 originalEvent: unthreadEvent.event,
@@ -59,13 +64,122 @@ export class WebhookService {
     }
 
     private mapEventType(unthreadEventType: UnthreadEventType): UnthreadEventType {
-        // Keep Unthread event types as-is since they are already standardized
-        // No transformation needed - use the exact event types from Unthread API
         return unthreadEventType;
     }
 
+    /**
+     * Database-based webhook source detection using comparison logic.
+     * Implements: Receive → Compare → Delete old → Save current workflow
+     * Strictly uses PostgreSQL - no fallbacks allowed.
+     */
+    private async detectWebhookSourceWithComparison(event: UnthreadWebhookEvent): Promise<WebhookSource> {
+        if (event.event !== 'message_created' || !event.data) {
+            LogEngine.debug(`Non-message event or missing data: ${event.event} - returning unknown`);
+            return 'unknown';
+        }
+
+        const { conversationId, botName, sentByUserId } = event.data;
+        const eventId = event.eventId;
+
+        if (!conversationId || !eventId || !botName || !sentByUserId) {
+            LogEngine.error(`Missing required fields for database comparison - conversationId: ${conversationId}, eventId: ${eventId}, botName: ${botName}, sentByUserId: ${sentByUserId}`);
+            throw new Error('Missing required fields for webhook processing');
+        }
+
+        // Step 1: Check if this exact event already exists (duplicate detection)
+        const eventExists = await this.databaseService.eventExists(eventId);
+        if (eventExists) {
+            LogEngine.info(`Duplicate event detected: ${eventId} - skipping processing`);
+            return 'unknown';
+        }
+
+        // Step 2: Get the last stored record for this conversation (ticket)
+        const lastRecord = await this.databaseService.getLastRecordForConversation(conversationId);
+        let detectedSource: WebhookSource = 'unknown';
+
+        if (!lastRecord) {
+            // First message in this conversation - determine source from botName pattern
+            detectedSource = this.detectWebhookSourceFromBotName(botName);
+            LogEngine.debug(`First message in conversation ${conversationId} - detected source: ${detectedSource}`);
+        } else {
+            // Step 3: Compare current event with stored data
+            const currentBotName = String(botName);
+            const currentSentByUserId = String(sentByUserId);
+            const storedBotName = lastRecord.botName;
+            const storedSentByUserId = lastRecord.sentByUserId;
+
+            LogEngine.debug(`Comparing for conversation ${conversationId}:`);
+            LogEngine.debug(`  Current: botName="${currentBotName}", sentByUserId="${currentSentByUserId}"`);
+            LogEngine.debug(`  Stored:  botName="${storedBotName}", sentByUserId="${storedSentByUserId}"`);
+
+            if (currentBotName !== storedBotName || currentSentByUserId !== storedSentByUserId) {
+                // Different source detected - determine from botName pattern
+                detectedSource = this.detectWebhookSourceFromBotName(botName);
+                LogEngine.info(`Source change detected in conversation ${conversationId}: ${detectedSource}`);
+            } else {
+                // Same source as previous message - determine from botName pattern
+                detectedSource = this.detectWebhookSourceFromBotName(botName);
+                LogEngine.debug(`Same source as previous message in conversation ${conversationId}: ${detectedSource}`);
+            }
+        }
+
+        // Step 4 & 5: Delete old record and save current (handled in saveWebhookRecord)
+        await this.databaseService.saveWebhookRecord({
+            conversationId,
+            eventId,
+            botName: String(botName),
+            sentByUserId: String(sentByUserId)
+        });
+
+        LogEngine.debug(`Webhook comparison record saved for conversation ${conversationId}, event ${eventId}`);
+        return detectedSource;
+    }
+
+    /**
+     * Detect webhook source from botName pattern only.
+     * - Target platform: botName starts with @ symbol  
+     * - Dashboard: botName is plain text without @ symbol
+     */
+    private detectWebhookSourceFromBotName(botName: any): WebhookSource {
+        if (!botName || typeof botName !== 'string') {
+            LogEngine.error(`Invalid botName for source detection: ${botName}`);
+            throw new Error('Invalid botName - cannot determine webhook source');
+        }
+
+        if (botName.startsWith('@')) {
+            LogEngine.debug(`BotName indicates target_platform: ${botName}`);
+            return 'target_platform';
+        } else {
+            LogEngine.debug(`BotName indicates dashboard: ${botName}`);
+            return 'dashboard';
+        }
+    }
+
+    /**
+     * Public method to detect webhook source using database comparison.
+     * Requires database operations - no fallbacks allowed.
+     */
+    public async getWebhookSource(event: UnthreadWebhookEvent): Promise<WebhookSource> {
+        return await this.detectWebhookSourceWithComparison(event);
+    }
+
+    /**
+     * Check if webhook is from dashboard using database comparison.
+     */
+    public async isFromDashboard(event: UnthreadWebhookEvent): Promise<boolean> {
+        const source = await this.detectWebhookSourceWithComparison(event);
+        return source === 'dashboard';
+    }
+
+    /**
+     * Check if webhook is from target platform using database comparison.
+     */
+    public async isFromTargetPlatform(event: UnthreadWebhookEvent): Promise<boolean> {
+        const source = await this.detectWebhookSourceWithComparison(event);
+        return source === 'target_platform';
+    }
+
     validateEvent(event: UnthreadWebhookEvent): ValidationResult {
-        // Validate Unthread.io event structure
         const requiredFields: (keyof UnthreadWebhookEvent)[] = ['event', 'eventId', 'eventTimestamp', 'webhookTimestamp'];
         const errors: string[] = [];
         

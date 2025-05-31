@@ -14,7 +14,8 @@ const requiredEnvVars: string[] = [
     'PORT',
     'TARGET_PLATFORM',
     'REDIS_URL',
-    'UNTHREAD_WEBHOOK_SECRET'
+    'UNTHREAD_WEBHOOK_SECRET',
+    'DATABASE_URL'
 ];
 
 function validateEnvironment(): void {
@@ -70,6 +71,14 @@ function loadConfig(): IEnvConfig {
     const redisUrl = process.env.REDIS_URL!;
     const unthreadWebhookSecret = process.env.UNTHREAD_WEBHOOK_SECRET!;
     
+    // Database configuration
+    const databaseUrl = process.env.DATABASE_URL!;
+    const databaseHost = process.env.DATABASE_HOST;
+    const databasePort = process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : undefined;
+    const databaseName = process.env.DATABASE_NAME;
+    const databaseUser = process.env.DATABASE_USER;
+    const databasePassword = process.env.DATABASE_PASSWORD;
+    
     const unthreadQueueName = 'unthread-events';
 
     // Log configuration summary for production - always visible
@@ -84,7 +93,13 @@ function loadConfig(): IEnvConfig {
         targetPlatform,
         unthreadQueueName,
         redisUrl,
-        unthreadWebhookSecret
+        unthreadWebhookSecret,
+        databaseUrl,
+        databaseHost,
+        databasePort,
+        databaseName,
+        databaseUser,
+        databasePassword
     };
 }
 

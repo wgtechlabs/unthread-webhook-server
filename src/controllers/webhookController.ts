@@ -23,6 +23,12 @@ export class WebhookController {
             // Log event processing for debugging
             LogEngine.debug(`Processing ${event} event (ID: ${eventId})`);
 
+            // Detect and log webhook source for message events
+            if (event === 'message_created') {
+                const webhookSource = this.webhookService.getWebhookSource(req.body);
+                LogEngine.info(`Message webhook received from: ${webhookSource}`);
+            }
+
             // Validate the event structure
             const validationResult = this.webhookService.validateEvent(req.body);
             if (!validationResult.isValid) {

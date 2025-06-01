@@ -75,6 +75,40 @@ export class RedisService {
         await this.client.setEx(key, ttl, 'processed');
     }
 
+    /**
+     * Atomically acquire a lock for event processing to prevent race conditions
+     * @param eventId - Unique event identifier
+     * @param lockTtlSeconds - Lock expiration time in seconds (default: 300 = 5 minutes)
+     * @returns Promise<boolean> - true if lock was acquired, false if already exists
+     */
+    async acquireEventLock(eventId: string, lockTtlSeconds: number = 300): Promise<boolean> {
+        const lockKey = `${redisEventConfig.keyPrefix}lock:${eventId}`;
+        try {
+            // Use SET with NX (only set if not exists) and EX (expiry)
+            const result = await this.client.set(lockKey, 'locked', {
+                NX: true, // Only set if key doesn't exist
+                EX: lockTtlSeconds // Set expiry
+            });
+            return result === 'OK';
+        } catch (err) {
+            LogEngine.error(`Error acquiring event lock for ${eventId}: ${err}`);
+            return false;
+        }
+    }
+
+    /**
+     * Release the lock for event processing
+     * @param eventId - Unique event identifier
+     */
+    async releaseEventLock(eventId: string): Promise<void> {
+        const lockKey = `${redisEventConfig.keyPrefix}lock:${eventId}`;
+        try {
+            await this.client.del(lockKey);
+        } catch (err) {
+            LogEngine.error(`Error releasing event lock for ${eventId}: ${err}`);
+        }
+    }
+
     async close(): Promise<void> {
         try {
             if (this.client.isOpen) {

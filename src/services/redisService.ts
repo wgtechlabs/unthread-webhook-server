@@ -92,7 +92,7 @@ export class RedisService {
             return result === 'OK';
         } catch (err) {
             LogEngine.error(`Error acquiring event lock for ${eventId}: ${err}`);
-            return false;
+            throw err;
         }
     }
 

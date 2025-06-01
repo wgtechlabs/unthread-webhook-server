@@ -53,18 +53,8 @@ export interface MessageEvent extends UnthreadWebhookEvent {
 }
 
 // Platform source types - indicates which platform initiated the event
-export type PlatformSource = 'dashboard' | 'target_platform' | 'unknown';
-
-// Platform source comparison record for database storage
-export interface WebhookComparisonRecord {
-  id?: number;
-  conversationId: string;  // Ticket ID
-  eventId: string;         // Message ID within ticket
-  botName: string;
-  sentByUserId: string;
-  createdAt?: Date;
-  updatedAt?: Date;
-}
+// Can be 'dashboard', 'unknown', or the actual target platform value from environment variable
+export type PlatformSource = string;
 
 // Union type for all webhook events
 export type WebhookEvent = UrlVerificationEvent | ConversationEvent | MessageEvent;
@@ -79,7 +69,7 @@ export interface RedisQueueMessage {
   platform: 'unthread';
   targetPlatform: string;
   type: UnthreadEventType;
-  sourcePlatform?: PlatformSource;
+  sourcePlatform?: string;
   data: {
     originalEvent: UnthreadEventType;
     eventId: string;
@@ -90,29 +80,13 @@ export interface RedisQueueMessage {
   timestamp: number;
 }
 
-// Environment configuration
+// Environment configuration - simplified
 export interface EnvConfig {
-  nodeEnv: 'development' | 'production' | 'test' | 'staging';
+  nodeEnv: string;
   port: number;
   targetPlatform: string;
-  unthreadQueueName: string;
   redisUrl: string;
   unthreadWebhookSecret: string;
-  // PostgreSQL configuration
-  databaseUrl: string;
-  databaseHost?: string | undefined;
-  databasePort?: number | undefined;
-  databaseName?: string | undefined;
-  databaseUser?: string | undefined;
-  databasePassword?: string | undefined;
-}
-
-// Redis configuration
-export interface RedisConfig {
-  host: string;
-  port: number;
-  password?: string;
-  url: string;
 }
 
 // Validation result interface

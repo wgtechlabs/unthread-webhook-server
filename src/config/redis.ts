@@ -1,9 +1,8 @@
 import { createClient } from 'redis';
 import { LogEngine } from '@wgtechlabs/log-engine';
-import { RedisConfig } from '../types';
 
-// Parse Redis URL - REDIS_URL is required
-function parseRedisConfig(): RedisConfig {
+// Simple Redis configuration
+function parseRedisConfig() {
     const redisUrl = process.env.REDIS_URL;
     
     if (!redisUrl) {
@@ -12,7 +11,7 @@ function parseRedisConfig(): RedisConfig {
     
     try {
         const url = new URL(redisUrl);
-        const config: RedisConfig = {
+        const config: any = {
             host: url.hostname,
             port: parseInt(url.port) || 6379,
             url: redisUrl
@@ -30,8 +29,21 @@ function parseRedisConfig(): RedisConfig {
 
 const redisConfig = parseRedisConfig();
 
-// Create Redis client for v4.x - use URL string directly
-const client = createClient({ url: redisConfig.url });
+// Event tracking configuration - hardcoded values
+export const redisEventConfig = {
+    // Event tracking configuration
+    eventTtl: 259200, // 3 days (72 hours * 60 minutes * 60 seconds)
+    maxRetries: 3,
+    keyPrefix: 'webhook:',
+};
+
+// Create Redis client for v4.x - use URL string directly with timeout
+const client = createClient({ 
+    url: redisConfig.url,
+    socket: {
+        connectTimeout: 5000 // 5 second timeout
+    }
+});
 
 client.on('error', (err?: Error) => {
     LogEngine.error(`Redis connection error: ${err}`);
@@ -39,6 +51,14 @@ client.on('error', (err?: Error) => {
 
 client.on('ready', () => {
     LogEngine.log('Redis connection established');
+});
+
+client.on('connect', () => {
+    LogEngine.log('Redis client connected');
+});
+
+client.on('reconnecting', () => {
+    LogEngine.log('Redis client reconnecting...');
 });
 
 export {

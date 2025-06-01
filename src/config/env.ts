@@ -1,110 +1,16 @@
-import { LogEngine } from '@wgtechlabs/log-engine';
-import { EnvConfig as IEnvConfig } from '../types';
-
-// Make this file a module
-export {};
-
 /**
- * Environment variable validation and configuration
- * All environment variables are required - server will crash if any are missing
+ * Simple environment configuration
+ * Just reads from process.env like a normal .env setup
  */
 
-const requiredEnvVars: string[] = [
-    'NODE_ENV',
-    'PORT',
-    'TARGET_PLATFORM',
-    'REDIS_URL',
-    'UNTHREAD_WEBHOOK_SECRET',
-    'DATABASE_URL'
-];
-
-function validateEnvironment(): void {
-    const missingVars: string[] = [];
-    const emptyVars: string[] = [];
-
-    for (const envVar of requiredEnvVars) {
-        const value = process.env[envVar];
-        
-        if (value === undefined) {
-            missingVars.push(envVar);
-        } else if (value.trim() === '') {
-            emptyVars.push(envVar);
-        }
-    }
-
-    if (missingVars.length > 0) {
-        const errorMsg = `Missing required environment variables: ${missingVars.join(', ')}`;
-        LogEngine.error(errorMsg);
-        throw new Error(errorMsg);
-    }
-
-    if (emptyVars.length > 0) {
-        const errorMsg = `Empty environment variables: ${emptyVars.join(', ')}`;
-        LogEngine.error(errorMsg);
-        throw new Error(errorMsg);
-    }
-
-    LogEngine.debug('All required environment variables are present and valid');
-}
-
-function loadConfig(): IEnvConfig {
-    validateEnvironment();
-    
-    const port = parseInt(process.env.PORT!, 10);
-    
-    if (isNaN(port) || port <= 0 || port > 65535) {
-        const errorMsg = `Invalid PORT value: ${process.env.PORT}. Must be a number between 1 and 65535`;
-        LogEngine.error(errorMsg);
-        throw new Error(errorMsg);
-    }
-
-    const nodeEnv = process.env.NODE_ENV! as 'development' | 'production' | 'test' | 'staging';
-    const validEnvs = ['development', 'production', 'test', 'staging'];
-    
-    if (!validEnvs.includes(nodeEnv)) {
-        const errorMsg = `Invalid NODE_ENV value: ${nodeEnv}. Must be one of: ${validEnvs.join(', ')}`;
-        LogEngine.error(errorMsg);
-        throw new Error(errorMsg);
-    }
-
-    const targetPlatform = process.env.TARGET_PLATFORM!;
-    const redisUrl = process.env.REDIS_URL!;
-    const unthreadWebhookSecret = process.env.UNTHREAD_WEBHOOK_SECRET!;
-    
-    // Database configuration
-    const databaseUrl = process.env.DATABASE_URL!;
-    const databaseHost = process.env.DATABASE_HOST;
-    const databasePort = process.env.DATABASE_PORT ? parseInt(process.env.DATABASE_PORT, 10) : undefined;
-    const databaseName = process.env.DATABASE_NAME;
-    const databaseUser = process.env.DATABASE_USER;
-    const databasePassword = process.env.DATABASE_PASSWORD;
-    
-    const unthreadQueueName = 'unthread-events';
-
-    // Log configuration summary for production - always visible
-    LogEngine.log('Environment configuration loaded successfully');
-    
-    // Debug-only detailed configuration (only visible in development)
-    LogEngine.debug(`Config: ${nodeEnv} mode | Port: ${port} | Platform: ${targetPlatform} | Queue: ${unthreadQueueName}`);
-
-    return {
-        nodeEnv,
-        port,
-        targetPlatform,
-        unthreadQueueName,
-        redisUrl,
-        unthreadWebhookSecret,
-        databaseUrl,
-        databaseHost,
-        databasePort,
-        databaseName,
-        databaseUser,
-        databasePassword
-    };
-}
-
-// Create and export the config
-export const config = loadConfig();
+export const config = {
+    nodeEnv: process.env.NODE_ENV || 'development',
+    port: parseInt(process.env.PORT || '3000', 10),
+    targetPlatform: process.env.TARGET_PLATFORM || 'telegram',
+    redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
+    unthreadWebhookSecret: process.env.UNTHREAD_WEBHOOK_SECRET || '',
+    unthreadQueueName: 'unthread-events' // Simple hardcoded queue name
+};
 
 // Also export as default
 export default config;

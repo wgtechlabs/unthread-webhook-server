@@ -8,11 +8,9 @@ export class WebhookController {
 
     constructor() {
         this.webhookService = new WebhookService();
-    }
-
-    async handleWebhook(req: WebhookRequest, res: Response<WebhookResponse | ErrorResponse>): Promise<Response> {
+    }    async handleWebhook(req: WebhookRequest, res: Response<WebhookResponse | ErrorResponse>): Promise<Response> {
         try {
-            const { event, eventId, eventTimestamp, webhookTimestamp, data } = req.body;
+            const { event, eventId } = req.body;
 
             // Handle URL verification event (required by Unthread)
             if (event === 'url_verification') {
@@ -23,12 +21,6 @@ export class WebhookController {
             // Log event processing for debugging
             LogEngine.debug(`Processing ${event} event (ID: ${eventId})`);
 
-            // Detect and log platform source for message events
-            if (event === 'message_created') {
-                const sourcePlatform = await this.webhookService.getSourcePlatform(req.body);
-                LogEngine.info(`Message event received from platform: ${sourcePlatform}`);
-            }
-
             // Validate the event structure
             const validationResult = this.webhookService.validateEvent(req.body);
             if (!validationResult.isValid) {
@@ -38,7 +30,7 @@ export class WebhookController {
                 });
             }
 
-            // Process the event
+            // Process the event - this handles duplicates internally
             await this.webhookService.processEvent(req.body);
 
             return res.status(200).json({ 
@@ -48,7 +40,7 @@ export class WebhookController {
             });
         } catch (error) {
             LogEngine.error(`Error handling webhook: ${error}`);
-            return res.status(500).json({ 
+            return res.status(500).json({
                 error: 'Internal server error',
                 timestamp: new Date().toISOString()
             });

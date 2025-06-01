@@ -2,7 +2,7 @@ import { LogEngine } from '@wgtechlabs/log-engine';
 import { RedisService } from './redisService';
 import { DatabaseService } from './databaseService';
 import { config } from '../config/env';
-import { UnthreadWebhookEvent, RedisQueueMessage, UnthreadEventType, ValidationResult, WebhookSource } from '../types';
+import { UnthreadWebhookEvent, RedisQueueMessage, UnthreadEventType, ValidationResult, PlatformSource } from '../types';
 
 export class WebhookService {
     private redisService: RedisService;
@@ -35,23 +35,23 @@ export class WebhookService {
             await this.databaseService.connect();
         }
 
-        const webhookSource = await this.detectWebhookSourceWithComparison(event);
-        const transformedEvent = this.transformEvent(event, webhookSource);
+        const sourcePlatform = await this.detectSourcePlatformWithComparison(event);
+        const transformedEvent = this.transformEvent(event, sourcePlatform);
 
-        if (transformedEvent.webhookSource) {
-            LogEngine.info(`Webhook source detected: ${transformedEvent.webhookSource} for event ${event.eventId}`);
+        if (transformedEvent.sourcePlatform) {
+            LogEngine.info(`Platform source detected: ${transformedEvent.sourcePlatform} for event ${event.eventId}`);
         }
 
         await this.redisService.publishEvent(transformedEvent);
-        LogEngine.debug(`Event processed and queued: ${event.event} (${event.eventId}) from ${transformedEvent.webhookSource || 'unknown'} source`);
+        LogEngine.debug(`Event processed and queued: ${event.event} (${event.eventId}) from ${transformedEvent.sourcePlatform || 'unknown'} source`);
     }
 
-    private transformEvent(unthreadEvent: UnthreadWebhookEvent, webhookSource: WebhookSource): RedisQueueMessage {
+    private transformEvent(unthreadEvent: UnthreadWebhookEvent, sourcePlatform: PlatformSource): RedisQueueMessage {
         return {
             platform: "unthread",
             targetPlatform: config.targetPlatform,
             type: this.mapEventType(unthreadEvent.event),
-            webhookSource,
+            sourcePlatform,
             data: {
                 ...unthreadEvent.data,
                 originalEvent: unthreadEvent.event,
@@ -68,11 +68,12 @@ export class WebhookService {
     }
 
     /**
-     * Database-based webhook source detection using comparison logic.
+     * Database-based platform source detection using comparison logic.
      * Implements: Receive → Compare → Delete old → Save current workflow
      * Strictly uses PostgreSQL - no fallbacks allowed.
+     * Detects which platform initiated the event (dashboard vs target platform).
      */
-    private async detectWebhookSourceWithComparison(event: UnthreadWebhookEvent): Promise<WebhookSource> {
+    private async detectSourcePlatformWithComparison(event: UnthreadWebhookEvent): Promise<PlatformSource> {
         if (event.event !== 'message_created' || !event.data) {
             LogEngine.debug(`Non-message event or missing data: ${event.event} - returning unknown`);
             return 'unknown';
@@ -95,11 +96,11 @@ export class WebhookService {
 
         // Step 2: Get the last stored record for this conversation (ticket)
         const lastRecord = await this.databaseService.getLastRecordForConversation(conversationId);
-        let detectedSource: WebhookSource = 'unknown';
+        let detectedSource: PlatformSource = 'unknown';
 
         if (!lastRecord) {
             // First message in this conversation - determine source from botName pattern
-            detectedSource = this.detectWebhookSourceFromBotName(botName);
+            detectedSource = this.detectSourcePlatformFromBotName(botName);
             LogEngine.debug(`First message in conversation ${conversationId} - detected source: ${detectedSource}`);
         } else {
             // Step 3: Compare current event with stored data
@@ -114,11 +115,11 @@ export class WebhookService {
 
             if (currentBotName !== storedBotName || currentSentByUserId !== storedSentByUserId) {
                 // Different source detected - determine from botName pattern
-                detectedSource = this.detectWebhookSourceFromBotName(botName);
+                detectedSource = this.detectSourcePlatformFromBotName(botName);
                 LogEngine.info(`Source change detected in conversation ${conversationId}: ${detectedSource}`);
             } else {
                 // Same source as previous message - determine from botName pattern
-                detectedSource = this.detectWebhookSourceFromBotName(botName);
+                detectedSource = this.detectSourcePlatformFromBotName(botName);
                 LogEngine.debug(`Same source as previous message in conversation ${conversationId}: ${detectedSource}`);
             }
         }
@@ -131,19 +132,19 @@ export class WebhookService {
             sentByUserId: String(sentByUserId)
         });
 
-        LogEngine.debug(`Webhook comparison record saved for conversation ${conversationId}, event ${eventId}`);
+        LogEngine.debug(`Platform source comparison record saved for conversation ${conversationId}, event ${eventId}`);
         return detectedSource;
     }
 
     /**
-     * Detect webhook source from botName pattern only.
+     * Detect platform source from botName pattern only.
      * - Target platform: botName starts with @ symbol  
      * - Dashboard: botName is plain text without @ symbol
      */
-    private detectWebhookSourceFromBotName(botName: any): WebhookSource {
+    private detectSourcePlatformFromBotName(botName: any): PlatformSource {
         if (!botName || typeof botName !== 'string') {
-            LogEngine.error(`Invalid botName for source detection: ${botName}`);
-            throw new Error('Invalid botName - cannot determine webhook source');
+            LogEngine.error(`Invalid botName for platform source detection: ${botName}`);
+            throw new Error('Invalid botName - cannot determine platform source');
         }
 
         if (botName.startsWith('@')) {
@@ -156,26 +157,26 @@ export class WebhookService {
     }
 
     /**
-     * Public method to detect webhook source using database comparison.
+     * Public method to detect platform source using database comparison.
      * Requires database operations - no fallbacks allowed.
      */
-    public async getWebhookSource(event: UnthreadWebhookEvent): Promise<WebhookSource> {
-        return await this.detectWebhookSourceWithComparison(event);
+    public async getSourcePlatform(event: UnthreadWebhookEvent): Promise<PlatformSource> {
+        return await this.detectSourcePlatformWithComparison(event);
     }
 
     /**
-     * Check if webhook is from dashboard using database comparison.
+     * Check if event is from dashboard using database comparison.
      */
     public async isFromDashboard(event: UnthreadWebhookEvent): Promise<boolean> {
-        const source = await this.detectWebhookSourceWithComparison(event);
+        const source = await this.detectSourcePlatformWithComparison(event);
         return source === 'dashboard';
     }
 
     /**
-     * Check if webhook is from target platform using database comparison.
+     * Check if event is from target platform using database comparison.
      */
     public async isFromTargetPlatform(event: UnthreadWebhookEvent): Promise<boolean> {
-        const source = await this.detectWebhookSourceWithComparison(event);
+        const source = await this.detectSourcePlatformWithComparison(event);
         return source === 'target_platform';
     }
 

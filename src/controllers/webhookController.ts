@@ -23,10 +23,10 @@ export class WebhookController {
             // Log event processing for debugging
             LogEngine.debug(`Processing ${event} event (ID: ${eventId})`);
 
-            // Detect and log webhook source for message events
+            // Detect and log platform source for message events
             if (event === 'message_created') {
-                const webhookSource = await this.webhookService.getWebhookSource(req.body);
-                LogEngine.info(`Message webhook received from: ${webhookSource}`);
+                const sourcePlatform = await this.webhookService.getSourcePlatform(req.body);
+                LogEngine.info(`Message event received from platform: ${sourcePlatform}`);
             }
 
             // Validate the event structure

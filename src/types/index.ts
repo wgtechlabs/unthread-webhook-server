@@ -52,13 +52,10 @@ export interface MessageEvent extends UnthreadWebhookEvent {
   };
 }
 
-// Webhook source types
-export type WebhookSource = 'dashboard' | 'target_platform' | 'unknown';
+// Platform source types - indicates which platform initiated the event
+export type PlatformSource = 'dashboard' | 'target_platform' | 'unknown';
 
-// Platform source for comparison (based on ENV target platform)
-export type PlatformSource = 'dashboard' | string; // string allows for dynamic target platform names
-
-// Webhook comparison record for database storage
+// Platform source comparison record for database storage
 export interface WebhookComparisonRecord {
   id?: number;
   conversationId: string;  // Ticket ID
@@ -82,8 +79,7 @@ export interface RedisQueueMessage {
   platform: 'unthread';
   targetPlatform: string;
   type: UnthreadEventType;
-  webhookSource?: WebhookSource;
-  platformSource?: PlatformSource; // New field for dashboard vs target platform
+  sourcePlatform?: PlatformSource;
   data: {
     originalEvent: UnthreadEventType;
     eventId: string;

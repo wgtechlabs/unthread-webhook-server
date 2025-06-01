@@ -75,12 +75,13 @@ export class RedisService {
         await this.client.setEx(key, ttl, 'processed');
     }
 
-    /**
-     * Atomically acquire a lock for event processing to prevent race conditions
-     * @param eventId - Unique event identifier
-     * @param lockTtlSeconds - Lock expiration time in seconds (default: 300 = 5 minutes)
-     * @returns Promise<boolean> - true if lock was acquired, false if already exists
-     */
+/**
+ * Atomically acquire a lock for event processing to prevent race conditions
+ * @param eventId - Unique event identifier
+ * @param lockTtlSeconds - Lock expiration time in seconds (default: 300 = 5 minutes)
+ * @returns Promise<boolean> - true if lock was acquired, false if already exists
+ * @throws Error if Redis operation fails
+ */
     async acquireEventLock(eventId: string, lockTtlSeconds: number = 300): Promise<boolean> {
         const lockKey = `${redisEventConfig.keyPrefix}lock:${eventId}`;
         try {
@@ -99,6 +100,7 @@ export class RedisService {
     /**
      * Release the lock for event processing
      * @param eventId - Unique event identifier
+     * @throws Error if Redis operation fails
      */
     async releaseEventLock(eventId: string): Promise<void> {
         const lockKey = `${redisEventConfig.keyPrefix}lock:${eventId}`;
@@ -106,6 +108,7 @@ export class RedisService {
             await this.client.del(lockKey);
         } catch (err) {
             LogEngine.error(`Error releasing event lock for ${eventId}: ${err}`);
+            throw err; // Re-throw to let caller handle the error
         }
     }
 

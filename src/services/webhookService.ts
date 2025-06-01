@@ -29,10 +29,17 @@ export class WebhookService {
 
         await this.initializeServices();
 
+        // Check for duplicate events first
+        const eventExists = await this.redisService.eventExists(event.eventId);
+        if (eventExists) {
+            LogEngine.info(`Event already processed - duplicate detected: ${event.eventId}`);
+            return;
+        }
+
         // Atomically acquire lock to prevent race conditions
         const lockAcquired = await this.redisService.acquireEventLock(event.eventId);
         if (!lockAcquired) {
-            LogEngine.info(`Event already being processed or duplicate detected - skipping: ${event.eventId}`);
+            LogEngine.info(`Event currently being processed by another instance - skipping: ${event.eventId}`);
             return;
         }
 
@@ -63,8 +70,13 @@ export class WebhookService {
             
             LogEngine.debug(`Event processed: ${event.event} (${event.eventId}) from ${sourcePlatform}`);
         } finally {
-            // Always release the lock to prevent stale locks
-            await this.redisService.releaseEventLock(event.eventId);
+            // Always release the lock to prevent stale locks, but handle errors gracefully
+            try {
+                await this.redisService.releaseEventLock(event.eventId);
+            } catch (lockReleaseError) {
+                // Log the error but don't fail the entire operation since event was processed
+                LogEngine.error(`Failed to release lock for ${event.eventId}: ${lockReleaseError}`);
+            }
         }
     }
 

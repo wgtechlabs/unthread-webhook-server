@@ -1,4 +1,4 @@
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 import { Request } from 'express';
 
 interface WebhookRequest extends Request {
@@ -81,15 +81,12 @@ export const verifySignature = (payload: string, signature: string, secret: stri
     const expectedSignature = generateSignature(payload, secret);
     
     try {
-        // Use crypto.timingSafeEqual for timing-safe comparison
-        const crypto = require('crypto');
-        
         // Ensure both strings are the same length before comparison
         if (signature.length !== expectedSignature.length) {
             return false;
         }
         
-        return crypto.timingSafeEqual(
+        return timingSafeEqual(
             Buffer.from(signature),
             Buffer.from(expectedSignature)
         );

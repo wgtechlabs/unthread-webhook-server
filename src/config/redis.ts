@@ -33,8 +33,7 @@ const redisConfig = parseRedisConfig();
 export const redisEventConfig = {
     // Event tracking configuration
     eventTtl: 259200, // 3 days (72 hours * 60 minutes * 60 seconds)
-    maxRetries: 3,
-    keyPrefix: 'webhook:',
+    keyPrefix: 'unthread:eventid:',
 };
 
 // Create Redis client for v4.x - use URL string directly with timeout

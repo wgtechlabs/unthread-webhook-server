@@ -29,55 +29,38 @@ export class WebhookService {
 
         await this.initializeServices();
 
-        // Check for duplicate events first
+        // Check for duplicate events
         const eventExists = await this.redisService.eventExists(event.eventId);
         if (eventExists) {
             LogEngine.info(`Event already processed - duplicate detected: ${event.eventId}`);
             return;
         }
 
-        // Atomically acquire lock to prevent race conditions
-        const lockAcquired = await this.redisService.acquireEventLock(event.eventId);
-        if (!lockAcquired) {
-            LogEngine.info(`Event currently being processed by another instance - skipping: ${event.eventId}`);
-            return;
+        // Detect platform source with enhanced logging
+        const sourcePlatform = this.detectPlatformSource(event);
+        
+        // Enhanced audit logging for detection validation
+        if (event.event === 'message_created' && event.data) {
+            const detectionSummary = [
+                `Detection: ${sourcePlatform}`,
+                `Event: ${event.eventId}`,
+                `Conversation: ${event.data.conversationId}`,
+                `ConversationUpdates: ${event.data.metadata?.event_payload?.conversationUpdates !== undefined ? 'present' : 'missing'}`,
+                `BotName: ${event.data.botName}`,
+                `External: ${event.data.isExternal}`
+            ].join(' | ');
+            
+            LogEngine.info(`Platform detection completed - ${detectionSummary}`);
         }
-
-        try {
-            // Detect platform source with enhanced logging
-            const sourcePlatform = this.detectPlatformSource(event);
-            
-            // Enhanced audit logging for detection validation
-            if (event.event === 'message_created' && event.data) {
-                const detectionSummary = [
-                    `Detection: ${sourcePlatform}`,
-                    `Event: ${event.eventId}`,
-                    `Conversation: ${event.data.conversationId}`,
-                    `ConversationUpdates: ${event.data.metadata?.event_payload?.conversationUpdates !== undefined ? 'present' : 'missing'}`,
-                    `BotName: ${event.data.botName}`,
-                    `External: ${event.data.isExternal}`
-                ].join(' | ');
-                
-                LogEngine.info(`Platform detection completed - ${detectionSummary}`);
-            }
-            
-            // Transform and queue event
-            const transformedEvent = this.transformEvent(event, sourcePlatform);
-            await this.redisService.publishEvent(transformedEvent);
-            
-            // Mark as processed
-            await this.redisService.markEventProcessed(event.eventId);
-            
-            LogEngine.debug(`Event processed: ${event.event} (${event.eventId}) from ${sourcePlatform}`);
-        } finally {
-            // Always release the lock to prevent stale locks, but handle errors gracefully
-            try {
-                await this.redisService.releaseEventLock(event.eventId);
-            } catch (lockReleaseError) {
-                // Log the error but don't fail the entire operation since event was processed
-                LogEngine.error(`Failed to release lock for ${event.eventId}: ${lockReleaseError}`);
-            }
-        }
+        
+        // Transform and queue event
+        const transformedEvent = this.transformEvent(event, sourcePlatform);
+        await this.redisService.publishEvent(transformedEvent);
+        
+        // Mark as processed
+        await this.redisService.markEventProcessed(event.eventId);
+        
+        LogEngine.debug(`Event processed: ${event.event} (${event.eventId}) from ${sourcePlatform}`);
     }
 
     private transformEvent(unthreadEvent: UnthreadWebhookEvent, sourcePlatform: PlatformSource): RedisQueueMessage {

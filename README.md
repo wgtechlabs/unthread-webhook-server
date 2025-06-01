@@ -17,20 +17,20 @@ Transform webhook integration from a security nightmare into confident, producti
 ### June 2025 - Major Enhancement Release
 
 - ✅ **Intelligent Platform Source Detection**: Real-time field-based analysis to distinguish dashboard vs target platform events
-- ✅ **Advanced Duplicate Prevention**: Redis-based TTL tracking with atomic locking prevents duplicate event processing
+- ✅ **Advanced Duplicate Prevention**: Redis-based TTL tracking prevents duplicate event processing
 - ✅ **Enhanced Redis Integration**: Improved connection handling, health monitoring, and graceful error recovery
 - ✅ **Comprehensive Audit Logging**: Detailed detection summaries and debugging information for platform classification
 - ✅ **Simplified Configuration**: Streamlined environment setup with hardcoded queue names for consistency
-- ✅ **Production Hardening**: Atomic locks, race condition prevention, and improved error handling
+- ✅ **Production Hardening**: Improved error handling and robust event processing
 
 ## ✨ Key Features
 
 - **Unthread.io Compliant**: Full HMAC-SHA256 signature verification and URL verification support - meets all Unthread security requirements out of the box.
 - **Intelligent Platform Source Detection**: Advanced field-based detection to distinguish between Unthread dashboard messages and target platform messages using real-time analysis.
-- **Duplicate Prevention System**: Redis-based event deduplication with TTL expiration and atomic lock mechanisms to prevent duplicate processing.
+- **Duplicate Prevention System**: Redis-based event deduplication with TTL expiration to prevent duplicate processing.
 - **TypeScript First**: 100% TypeScript codebase with strict type checking, comprehensive type definitions, and excellent IntelliSense support for confident development.
 - **Redis Queue Integration**: Automatic event queuing to Redis with the hardcoded `unthread-events` queue name for consistent integration across deployments.
-- **Enterprise Security**: Robust signature verification, request validation, atomic event locking, and comprehensive error handling with graceful lock cleanup.
+- **Enterprise Security**: Robust signature verification, request validation, and comprehensive error handling.
 - **Production Ready**: Battle-tested error handling, logging with [@wgtechlabs/log-engine](https://github.com/wgtechlabs/log-engine), and designed for high-throughput production environments.
 - **Zero Configuration**: Intelligent auto-configuration with sensible defaults - just set your environment variables and start processing webhooks.
 - **Developer Experience**: Beautiful colored logs, comprehensive audit trails for platform detection, and simple API that you can master in minutes.
@@ -45,9 +45,8 @@ Transform webhook integration from a security nightmare into confident, producti
 3. **Duplicate Detection**: Advanced Redis-based duplicate prevention system checks if events have already been processed using TTL-based tracking
 4. **Platform Source Detection**: Intelligent field-based analysis automatically determines if events originate from the Unthread dashboard or your target platform
 5. **Event Processing**: Valid webhook events are parsed, validated, and processed with comprehensive audit logging for detection validation
-6. **Atomic Locking**: Redis-based distributed locking prevents race conditions during event processing across multiple server instances
-7. **Redis Queuing**: Events are automatically published to the `unthread-events` Redis queue for asynchronous processing by your application
-8. **Error Handling**: Comprehensive error handling with graceful lock cleanup ensures failed requests are logged and properly responded to
+6. **Redis Queuing**: Events are automatically published to the `unthread-events` Redis queue for asynchronous processing by your application
+7. **Error Handling**: Comprehensive error handling ensures failed requests are logged and properly responded to
 
 Ready to streamline your Unthread.io integration? Get started in seconds with our [simple installation](#📦-installation)!
 
@@ -150,7 +149,7 @@ The server automatically handles:
 - **Duplicate event prevention** - Redis-based deduplication with TTL prevents processing the same event twice
 - **Event queuing to Redis** - Queues events to the `unthread-events` queue for asynchronous processing
 - **Comprehensive audit logging** - Detailed logs for platform detection validation and debugging
-- **Error handling and recovery** - Graceful error handling with proper lock cleanup and retry mechanisms
+- **Error handling and recovery** - Graceful error handling and retry mechanisms
 
 ### Platform Source Detection
 
@@ -194,8 +193,7 @@ Events are queued to Redis with the following enhanced structure:
 #### Duplicate Prevention
 
 - **TTL-based tracking**: Events are tracked in Redis with 3-day expiration
-- **Atomic locking**: Distributed locks prevent race conditions
-- **Graceful cleanup**: Locks are properly released even on errors
+- **Simple deduplication**: Prevents processing the same event multiple times
 
 #### Health Monitoring
 
@@ -253,9 +251,9 @@ The detection system is designed for high reliability:
 
 ### Scaling Considerations
 
-- **Horizontal Scaling**: Multiple instances supported with Redis-based locking
-- **Lock Management**: 5-minute lock TTL prevents stale locks
-- **Duplicate Prevention**: 3-day TTL on processed events balances memory and reliability
+- **Single Instance per Platform**: Designed for one webhook server per platform deployment
+- **Memory Efficient**: 3-day TTL on processed events balances memory and reliability
+- **Simple Architecture**: No complex distributed coordination required
 
 ## 🔍 Monitoring & Troubleshooting
 
@@ -297,7 +295,7 @@ Response examples:
 
 - **Symptom**: Same event processed multiple times
 - **Cause**: Redis connection issues during processing
-- **Solution**: Monitor Redis connectivity and lock cleanup logs
+- **Solution**: Monitor Redis connectivity and check server logs
 
 #### Platform Detection Issues
 
@@ -317,7 +315,6 @@ Key log markers:
 
 - **Detection Summary**: Platform source classification details
 - **Event Processing**: Successful event handling confirmation  
-- **Lock Operations**: Distributed lock acquisition and release
 - **Redis Operations**: Queue publishing and health status
 
 ## 💬 Community Discussions

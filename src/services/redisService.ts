@@ -59,7 +59,7 @@ export class RedisService {
      * @returns Promise<boolean> - true if event exists
      */
     async eventExists(eventId: string): Promise<boolean> {
-        const key = `${redisEventConfig.keyPrefix}event:${eventId}`;
+        const key = `${redisEventConfig.keyPrefix}${eventId}`;
         const exists = await this.client.exists(key);
         return exists === 1;
     }
@@ -70,46 +70,9 @@ export class RedisService {
      * @param ttlSeconds - Time to live in seconds (default: 3 days from config)
      */
     async markEventProcessed(eventId: string, ttlSeconds?: number): Promise<void> {
-        const key = `${redisEventConfig.keyPrefix}event:${eventId}`;
+        const key = `${redisEventConfig.keyPrefix}${eventId}`;
         const ttl = ttlSeconds || redisEventConfig.eventTtl; // 3 days default
         await this.client.setEx(key, ttl, 'processed');
-    }
-
-/**
- * Atomically acquire a lock for event processing to prevent race conditions
- * @param eventId - Unique event identifier
- * @param lockTtlSeconds - Lock expiration time in seconds (default: 300 = 5 minutes)
- * @returns Promise<boolean> - true if lock was acquired, false if already exists
- * @throws Error if Redis operation fails
- */
-    async acquireEventLock(eventId: string, lockTtlSeconds: number = 300): Promise<boolean> {
-        const lockKey = `${redisEventConfig.keyPrefix}lock:${eventId}`;
-        try {
-            // Use SET with NX (only set if not exists) and EX (expiry)
-            const result = await this.client.set(lockKey, 'locked', {
-                NX: true, // Only set if key doesn't exist
-                EX: lockTtlSeconds // Set expiry
-            });
-            return result === 'OK';
-        } catch (err) {
-            LogEngine.error(`Error acquiring event lock for ${eventId}: ${err}`);
-            throw err;
-        }
-    }
-
-    /**
-     * Release the lock for event processing
-     * @param eventId - Unique event identifier
-     * @throws Error if Redis operation fails
-     */
-    async releaseEventLock(eventId: string): Promise<void> {
-        const lockKey = `${redisEventConfig.keyPrefix}lock:${eventId}`;
-        try {
-            await this.client.del(lockKey);
-        } catch (err) {
-            LogEngine.error(`Error releasing event lock for ${eventId}: ${err}`);
-            throw err; // Re-throw to let caller handle the error
-        }
     }
 
     async close(): Promise<void> {

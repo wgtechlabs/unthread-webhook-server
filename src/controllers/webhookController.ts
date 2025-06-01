@@ -25,7 +25,7 @@ export class WebhookController {
 
             // Detect and log webhook source for message events
             if (event === 'message_created') {
-                const webhookSource = this.webhookService.getWebhookSource(req.body);
+                const webhookSource = await this.webhookService.getWebhookSource(req.body);
                 LogEngine.info(`Message webhook received from: ${webhookSource}`);
             }
 

@@ -47,3 +47,53 @@ export const verifyWebhookSignature = (req: Request, secret: string): boolean =>
 
     return signature === expectedSignature;
 };
+
+/**
+ * Generate HMAC SHA-256 signature for webhook verification
+ * @param payload - The payload to sign
+ * @param secret - The signing secret
+ * @returns Signature in sha256=<hash> format
+ */
+export const generateSignature = (payload: string, secret: string): string => {
+    const hash = createHmac('sha256', secret)
+        .update(payload, 'utf8')
+        .digest('hex');
+    
+    return `sha256=${hash}`;
+};
+
+/**
+ * Verify a webhook signature using timing-safe comparison
+ * @param payload - The payload to verify
+ * @param signature - The provided signature
+ * @param secret - The signing secret
+ * @returns True if signature is valid
+ */
+export const verifySignature = (payload: string, signature: string, secret: string): boolean => {
+    if (!signature || typeof signature !== 'string') {
+        return false;
+    }
+    
+    if (!payload || typeof payload !== 'string') {
+        return false;
+    }
+    
+    const expectedSignature = generateSignature(payload, secret);
+    
+    try {
+        // Use crypto.timingSafeEqual for timing-safe comparison
+        const crypto = require('crypto');
+        
+        // Ensure both strings are the same length before comparison
+        if (signature.length !== expectedSignature.length) {
+            return false;
+        }
+        
+        return crypto.timingSafeEqual(
+            Buffer.from(signature),
+            Buffer.from(expectedSignature)
+        );
+    } catch (error) {
+        return false;
+    }
+};

@@ -40,17 +40,29 @@ export class WebhookService {
         const sourcePlatform = this.detectPlatformSource(event);
         
         // Enhanced audit logging for detection validation
-        if (event.event === 'message_created' && event.data) {
-            const detectionSummary = [
-                `Detection: ${sourcePlatform}`,
-                `Event: ${event.eventId}`,
-                `Conversation: ${event.data.conversationId}`,
-                `ConversationUpdates: ${event.data.metadata?.event_payload?.conversationUpdates !== undefined ? 'present' : 'missing'}`,
-                `BotName: ${event.data.botName}`,
-                `External: ${event.data.isExternal}`
-            ].join(' | ');
-            
-            LogEngine.info(`Platform detection completed - ${detectionSummary}`);
+        if ((event.event === 'message_created' || event.event === 'conversation_updated') && event.data) {
+            if (event.event === 'message_created') {
+                const detectionSummary = [
+                    `Detection: ${sourcePlatform}`,
+                    `Event: ${event.eventId}`,
+                    `Conversation: ${event.data.conversationId}`,
+                    `ConversationUpdates: ${event.data.metadata?.event_payload?.conversationUpdates !== undefined ? 'present' : 'missing'}`,
+                    `BotName: ${event.data.botName}`,
+                    `External: ${event.data.isExternal}`
+                ].join(' | ');
+                
+                LogEngine.info(`Platform detection completed - ${detectionSummary}`);
+            } else if (event.event === 'conversation_updated') {
+                const detectionSummary = [
+                    `Detection: ${sourcePlatform}`,
+                    `Event: ${event.eventId}`,
+                    `Conversation: ${event.data.id}`,
+                    `Type: conversation_updated`,
+                    `Reason: administrative action`
+                ].join(' | ');
+                
+                LogEngine.info(`Platform detection completed - ${detectionSummary}`);
+            }
         }
         
         // Transform and queue event
@@ -83,11 +95,18 @@ export class WebhookService {
 
     /**
      * Simplified platform source detection
+     * - If conversation_updated → 'dashboard' (always administrative actions)
      * - If from dashboard → 'dashboard'
      * - If unknown → 'unknown' 
      * - Otherwise → use the actual target platform value from environment variable
      */
     private detectPlatformSource(event: UnthreadWebhookEvent): PlatformSource {
+        // Conversation updates are always administrative actions from dashboard
+        if (event.event === 'conversation_updated') {
+            LogEngine.debug(`Platform detected via event type: dashboard (${event.eventId}) - conversation updates are administrative actions`);
+            return 'dashboard';
+        }
+
         if (event.event !== 'message_created' || !event.data) {
             return 'unknown';
         }

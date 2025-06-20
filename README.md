@@ -1,4 +1,4 @@
-# Unthread Webhook Server 🎫⚡ [![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs) [![official](https://img.shields.io/badge/official-Unthread%20Extension-FF5241.svg?logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://unthread.com)
+# Unthread Webhook Server 🎫⚡[![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs) [![community](https://img.shields.io/badge/community-Unthread%20Extension-FF5241.svg?logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://unthread.com)
 
 
 [![node](https://img.shields.io/badge/node-%3E%3D16-green.svg?style=flat-square&labelColor=181717&logo=node.js&logoColor=white)](https://nodejs.org/) [![typescript](https://img.shields.io/badge/typescript-5.x-blue.svg?style=flat-square&labelColor=181717&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs) [![release](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/license)
@@ -7,6 +7,19 @@
 A **production-ready Node.js webhook server** specifically engineered for Unthread.io integration - built with TypeScript, Express.js, and Redis for reliable webhook event processing. This server implements proper HMAC-SHA256 signature verification, handles URL verification, and features **intelligent platform source detection** with Redis-based duplicate prevention.
 
 **Perfect for Discord bots, Telegram bots, web applications, and any service that needs to process Unthread.io webhook events reliably.** Whether you're building customer support automation, community management tools, or advanced ticketing systems, this webhook server provides the robust foundation you need with advanced event deduplication and source detection capabilities.
+
+## 🤗 Special Thanks
+
+### 🤝 Partner Organizations
+
+These outstanding organizations partner with us to support our open-source work:
+
+<!-- markdownlint-disable MD033 -->
+| <div align="center">💎 Platinum Sponsor</div> |
+|:-------------------------------------------:|
+| <a href="https://unthread.com"><img src="https://raw.githubusercontent.com/wgtechlabs/unthread-discord-bot/main/.github/assets/sponsors/platinum_unthread.png" width="250" alt="Unthread"></a> |
+| <div align="center"><a href="https://unthread.com" target="_blank"><b>Unthread</b></a><br/>Streamlined support ticketing for modern teams.</div> |
+<!-- markdownlint-enable MD033 -->
 
 ## ❣️ Motivation
 
@@ -414,3 +427,5 @@ This project is created by **[Waren Gonzaga](https://github.com/warengonzaga)** 
 ---
 
 💻 with ❤️ by [Waren Gonzaga](https://warengonzaga.com) under [WG Technology Labs](https://wgtechlabs.com), and [Him](https://www.youtube.com/watch?v=HHrxS4diLew&t=44s) 🙏
+
+<!-- GitAds-Verify: 46GGWGNHH1QGNNWIX2XENTW6AQHPRY1C -->

@@ -8,7 +8,7 @@
   "contributors": [
     "Waren Gonzaga <opensource@warengonzaga.com> (https://warengonzaga.com)"
   ],
-  "funding": [ 
+  "funding": [
     {
       "type": "github",
       "url": "https://github.com/sponsors/wgtechlabs"
@@ -20,7 +20,7 @@
   ],
   "main": "dist/app.js",
   "scripts": {
-    "preinstall": "only-allow yarn",
+    "preinstall": "npx only-allow yarn",
     "build": "tsc",
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts",
@@ -32,6 +32,8 @@
     "dotenv": "^16.4.0",
     "express": "^4.21.0",
     "express-validator": "^7.2.0",
+    "global": "4.4.0",
+    "npm": "11.4.2",
     "redis": "^4.7.0"
   },
   "devDependencies": {

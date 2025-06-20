@@ -1,6 +1,8 @@
-# Unthread Webhook Server 🔗⚡ [![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs)
+# Unthread Webhook Server 🎫⚡ [![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs) [![official](https://img.shields.io/badge/official-Unthread%20Extension-FF5241.svg?logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://unthread.com)
 
-[![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/LICENSE) [![release](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs)
+
+[![node](https://img.shields.io/badge/node-%3E%3D16-green.svg?style=flat-square&labelColor=181717&logo=node.js&logoColor=white)](https://nodejs.org/) [![typescript](https://img.shields.io/badge/typescript-5.x-blue.svg?style=flat-square&labelColor=181717&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs) [![release](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/license)
+
 
 A **production-ready Node.js webhook server** specifically engineered for Unthread.io integration - built with TypeScript, Express.js, and Redis for reliable webhook event processing. This server implements proper HMAC-SHA256 signature verification, handles URL verification, and features **intelligent platform source detection** with Redis-based duplicate prevention.
 
@@ -8,45 +10,30 @@ A **production-ready Node.js webhook server** specifically engineered for Unthre
 
 ## ❣️ Motivation
 
-Ever stared at webhook documentation wondering if you're implementing signature verification correctly? Or worried your event processing might miss critical messages? I built this because webhooks shouldn't be scary.
-
-Transform webhook integration from a security nightmare into confident, production-ready infrastructure. Skip the hours of HMAC debugging, Redis queue setup, and "did I handle that edge case?" moments. Just plug in your secrets and watch events flow reliably to your application - because great integrations should feel effortless, not exhausting.
-
-## 🆕 Latest Updates
-
-### June 2025 - Major Enhancement Release
-
-- ✅ **Intelligent Platform Source Detection**: Real-time field-based analysis to distinguish dashboard vs target platform events
-- ✅ **Advanced Duplicate Prevention**: Redis-based TTL tracking prevents duplicate event processing
-- ✅ **Enhanced Redis Integration**: Improved connection handling, health monitoring, and graceful error recovery
-- ✅ **Comprehensive Audit Logging**: Detailed detection summaries and debugging information for platform classification
-- ✅ **Simplified Configuration**: Streamlined environment setup with hardcoded queue names for consistency
-- ✅ **Production Hardening**: Improved error handling and robust event processing
+Webhooks shouldn't be scary. Skip the hours of HMAC debugging, Redis setup, and "did I handle that edge case?" moments. Transform webhook integration from a security nightmare into confident, production-ready infrastructure - just plug in your secrets and watch events flow reliably.
 
 ## ✨ Key Features
 
-- **Unthread.io Compliant**: Full HMAC-SHA256 signature verification and URL verification support - meets all Unthread security requirements out of the box.
-- **Intelligent Platform Source Detection**: Advanced field-based detection to distinguish between Unthread dashboard messages and target platform messages using real-time analysis.
-- **Duplicate Prevention System**: Redis-based event deduplication with TTL expiration to prevent duplicate processing.
-- **TypeScript First**: 100% TypeScript codebase with strict type checking, comprehensive type definitions, and excellent IntelliSense support for confident development.
-- **Redis Queue Integration**: Automatic event queuing to Redis with the hardcoded `unthread-events` queue name for consistent integration across deployments.
-- **Enterprise Security**: Robust signature verification, request validation, and comprehensive error handling.
-- **Production Ready**: Battle-tested error handling, logging with [@wgtechlabs/log-engine](https://github.com/wgtechlabs/log-engine), and designed for high-throughput production environments.
-- **Zero Configuration**: Intelligent auto-configuration with sensible defaults - just set your environment variables and start processing webhooks.
-- **Developer Experience**: Beautiful colored logs, comprehensive audit trails for platform detection, and simple API that you can master in minutes.
-- **Yarn Enforced**: Consistent dependency management with automatic npm blocking - ensures reliable builds across all environments.
+- **Unthread.io Compliant**: Full HMAC-SHA256 signature verification and URL verification support
+- **Smart Platform Detection**: Distinguishes between dashboard and target platform messages automatically
+- **Duplicate Prevention**: Redis-based event deduplication with TTL expiration
+- **TypeScript First**: 100% TypeScript with strict type checking and excellent IntelliSense
+- **Redis Queue Integration**: Auto-queues events to `unthread-events` for consistent processing
+- **Production Ready**: Battle-tested with [@wgtechlabs/log-engine](https://github.com/wgtechlabs/log-engine) logging and enterprise security
+- **Zero Configuration**: Just set environment variables and start processing webhooks
+- **Developer Experience**: Beautiful logs, audit trails, and simple API you'll master in minutes
 
 ## 🤔 How It Works
 
 <!-- markdownlint-disable MD051 -->
 
-1. **Webhook Reception**: The server receives POST requests from Unthread.io at the `/unthread-webhook` endpoint with proper CORS and security headers
-2. **Signature Verification**: Each incoming request is validated using HMAC-SHA256 signature verification against your Unthread webhook secret
-3. **Duplicate Detection**: Advanced Redis-based duplicate prevention system checks if events have already been processed using TTL-based tracking
-4. **Platform Source Detection**: Intelligent field-based analysis automatically determines if events originate from the Unthread dashboard or your target platform
-5. **Event Processing**: Valid webhook events are parsed, validated, and processed with comprehensive audit logging for detection validation
-6. **Redis Queuing**: Events are automatically published to the `unthread-events` Redis queue for asynchronous processing by your application
-7. **Error Handling**: Comprehensive error handling ensures failed requests are logged and properly responded to
+1. **Webhook Reception**: Receives POST requests from Unthread.io at `/unthread-webhook`
+2. **Signature Verification**: Validates requests using HMAC-SHA256 against your webhook secret
+3. **Duplicate Detection**: Redis-based prevention checks if events were already processed
+4. **Platform Source Detection**: Determines if events originate from dashboard or target platform
+5. **Event Processing**: Parses and validates webhook events with audit logging
+6. **Redis Queuing**: Publishes events to `unthread-events` queue for async processing
+7. **Error Handling**: Logs failed requests and returns proper HTTP responses
 
 Ready to streamline your Unthread.io integration? Get started in seconds with our [simple installation](#📦-installation)!
 
@@ -85,19 +72,20 @@ cp .env.example .env
 Edit `.env` with your configuration:
 
 ```env
+NODE_ENV=development
 PORT=3000
-UNTHREAD_WEBHOOK_SECRET=your_actual_signing_secret_here
-REDIS_URL=redis://localhost:6379
 TARGET_PLATFORM=telegram
+REDIS_URL=redis://localhost:6379
+UNTHREAD_WEBHOOK_SECRET=your_signing_secret_here
 ```
 
 ### Environment Variables
 
-- **`PORT`**: Server port (default: 3000)
-- **`UNTHREAD_WEBHOOK_SECRET`**: Your Unthread.io signing secret (required)
-- **`REDIS_URL`**: Redis connection URL (default: redis://localhost:6379)
-- **`TARGET_PLATFORM`**: Platform identifier for source detection (default: telegram)
 - **`NODE_ENV`**: Environment mode (default: development)
+- **`PORT`**: Server port (default: 3000)
+- **`TARGET_PLATFORM`**: Platform identifier for source detection (default: telegram)
+- **`REDIS_URL`**: Redis connection URL (default: redis://localhost:6379)
+- **`UNTHREAD_WEBHOOK_SECRET`**: Your Unthread.io signing secret (required)
 
 > **Note**: The Redis queue name is hardcoded as `unthread-events` for consistency across all deployments.
 
@@ -129,7 +117,7 @@ yarn start
 The server will start on `http://localhost:3000` with the following endpoints:
 
 - `GET /health` - Health check endpoint
-- `POST /unthread-webhook` - Main webhook endpoint for Unthread
+- `POST /unthread-webhook` - Main webhook endpoint for Unthread events
 
 ## 🕹️ Usage
 
@@ -153,17 +141,20 @@ The server automatically handles:
 
 ### Platform Source Detection
 
-The server automatically detects the source of incoming events:
+The server automatically detects the source of incoming events using a sophisticated detection system:
+
+#### Detection Methods
+
+1. **Event Type Analysis**: `conversation_updated` events are always classified as dashboard sources (administrative actions)
+2. **Primary Detection**: Analysis of `conversationUpdates` field in event metadata (100% reliable for message events)
+3. **Secondary Detection**: Pattern matching on `botName` field (fallback method for edge cases)
+4. **Comprehensive Logging**: Detailed audit trails for validation and debugging
+
+#### Source Classifications
 
 - **Dashboard Source**: Messages sent from Unthread support agents via the dashboard
 - **Target Platform Source**: Messages from users on your configured platform (e.g., Telegram, Discord)
-- **Unknown Source**: Events that cannot be reliably classified
-
-Detection is performed using:
-
-1. **Primary Detection**: Analysis of `conversationUpdates` field presence (100% reliable)
-2. **Secondary Detection**: Pattern matching on `botName` field (fallback method)
-3. **Audit Logging**: Comprehensive detection logs for validation and debugging
+- **Unknown Source**: Events that cannot be reliably classified (rare edge cases)
 
 ### Redis Queue Message Structure
 
@@ -188,18 +179,17 @@ Events are queued to Redis with the following enhanced structure:
 }
 ```
 
-### Advanced Features
+### Supported Event Types
 
-#### Duplicate Prevention
+The server handles the following Unthread webhook events:
 
-- **TTL-based tracking**: Events are tracked in Redis with 3-day expiration
-- **Simple deduplication**: Prevents processing the same event multiple times
+- **`url_verification`**: Automatic URL verification for webhook setup
+- **`conversation_created`**: New conversation initialization events
+- **`conversation_updated`**: Conversation status and metadata changes
+- **`conversation_deleted`**: Conversation removal events
+- **`message_created`**: New message events from both dashboard and target platform
 
-#### Health Monitoring
-
-- **Redis connectivity**: Health endpoint checks Redis connection status
-- **Comprehensive logging**: Structured logs with detection summaries
-- **Error tracking**: Detailed error logging with context
+All events are validated, processed, and queued to Redis with enhanced metadata for downstream processing.
 
 ### Unthread Configuration
 
@@ -236,18 +226,20 @@ The server uses a hardcoded Redis queue name `unthread-events` for consistency a
 
 ### Redis Requirements
 
-- **Minimum Redis Version**: 4.0+ (uses Redis v4.x client)
-- **Memory Considerations**: Event tracking uses TTL-based keys (3-day expiration)
-- **Connection Pooling**: Single connection with automatic reconnection handling
-- **Health Monitoring**: `/health` endpoint includes Redis connectivity status
+- **Minimum Redis Version**: 4.0+ (compatible with Redis v4.x client)
+- **Memory Considerations**: Event tracking uses TTL-based keys with automatic expiration
+- **Connection Management**: Single connection with automatic reconnection handling
+- **Health Monitoring**: `/health` endpoint includes real-time Redis connectivity status
+- **Queue Operations**: Uses `unthread-events` queue name for consistent integration
 
 ### Platform Source Detection Reliability
 
-The detection system is designed for high reliability:
+The detection system provides high reliability through multiple detection methods:
 
-- **Primary Method**: 100% reliable using `conversationUpdates` field analysis
-- **Fallback Method**: Pattern matching for edge cases
-- **Logging**: Comprehensive audit trails for validation and debugging
+- **Event Type Detection**: 100% reliable for `conversation_updated` events (always dashboard)
+- **Metadata Analysis**: 100% reliable using `conversationUpdates` field presence
+- **BotName Pattern Matching**: High reliability fallback using naming conventions
+- **Comprehensive Audit Logging**: Full detection trails for validation and debugging
 
 ### Scaling Considerations
 
@@ -317,6 +309,40 @@ Key log markers:
 - **Event Processing**: Successful event handling confirmation  
 - **Redis Operations**: Queue publishing and health status
 
+## 🔧 Development
+
+### Building the Project
+
+```bash
+# Clean previous builds
+yarn clean
+
+# Type checking only (no build)
+yarn type-check
+
+# Build for production
+yarn build
+
+# Start production build
+yarn start
+```
+
+### Development Workflow
+
+1. **Install dependencies**: `yarn install`
+2. **Set up environment**: Copy `.env.example` to `.env` and configure
+3. **Start Redis**: Ensure Redis is running locally or via Docker
+4. **Run in development**: `yarn dev` for hot-reload development
+5. **Test webhooks**: Use tools like ngrok for local testing with Unthread
+
+### Project Standards
+
+- **Package Manager**: Yarn enforced via `preinstall` script
+- **TypeScript**: Strict mode enabled with comprehensive type checking
+- **Code Style**: Consistent formatting and linting practices
+- **Error Handling**: Comprehensive error handling with detailed logging
+- **Documentation**: Inline code documentation and comprehensive README
+
 ## 💬 Community Discussions
 
 Join our community discussions to get help, share ideas, and connect with other users:
@@ -377,7 +403,7 @@ I'm committed to providing a welcoming and inclusive environment for all contrib
 
 ## 📃 License
 
-This project is licensed under the [GNU Affero General Public License v3.0](https://opensource.org/licenses/AGPL-3.0). This license requires that all modifications to the code must be shared under the same license, especially when the software is used over a network. See the [LICENSE](LICENSE) file for the full license text.
+This project is licensed under the [GNU General Public License v3.0](https://opensource.org/licenses/GPL-3.0). This license ensures that all modifications to the code remain open source and freely available to the community. See the [LICENSE](LICENSE) file for the full license text.
 
 ## 📝 Author
 

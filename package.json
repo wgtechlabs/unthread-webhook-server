@@ -1,11 +1,22 @@
 {
   "name": "unthread-webhook-server",
-  "version": "0.1.0-beta",
+  "version": "1.0.0-beta",
   "description": "A Node.js server application that receives webhook events from Unthread.io and queues them for processing.",
-  "license": "AGPL-3.0",
+  "license": "GPL-3.0",
+  "private": true,
   "author": "WG Tech Labs <opensource@wgtechlabs.com> (https://wgtechlabs.com)",
   "contributors": [
     "Waren Gonzaga <opensource@warengonzaga.com> (https://warengonzaga.com)"
+  ],
+  "funding": [ 
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/wgtechlabs"
+    },
+    {
+      "type": "github",
+      "url": "https://github.com/sponsors/warengonzaga"
+    }
   ],
   "main": "dist/app.js",
   "scripts": {

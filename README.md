@@ -21,6 +21,12 @@ These outstanding organizations partner with us to support our open-source work:
 | <div align="center"><a href="https://unthread.com" target="_blank"><b>Unthread</b></a><br/>Streamlined support ticketing for modern teams.</div> |
 <!-- markdownlint-enable MD033 -->
 
+## 💸 Sponsored Ads
+
+Open source development is resource-intensive. These **sponsored ads help keep Log Engine free and actively maintained** while connecting you with tools and services that support open-source development.
+
+[![sponsored ads](https://gitads.dev/v1/ad-serve?source=wgtechlabs/unthread-webhook-server@github)](https://gitads.dev/v1/ad-track?source=wgtechlabs/unthread-webhook-server@github)
+
 ## ❣️ Motivation
 
 Webhooks shouldn't be scary. Skip the hours of HMAC debugging, Redis setup, and "did I handle that edge case?" moments. Transform webhook integration from a security nightmare into confident, production-ready infrastructure - just plug in your secrets and watch events flow reliably.

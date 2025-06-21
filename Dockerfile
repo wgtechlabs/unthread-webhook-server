@@ -31,8 +31,7 @@ COPY package.json yarn.lock .yarnrc ./
 # Set environment to production
 ENV NODE_ENV=production
 # Install only production dependencies
-RUN yarn config set strict-ssl false && \
-    yarn install --frozen-lockfile --production --ignore-scripts && \
+RUN yarn install --frozen-lockfile --production --ignore-scripts && \
     yarn cache clean
 
 # Copy built application from builder stage

@@ -134,3 +134,11 @@ ai_context/
 
 # Enforce Yarn usage - ignore npm lockfile
 package-lock.json
+
+# Environment files with sensitive data
+.env
+.env.docker
+.env.test
+.env.local
+.env.*.local
+.env.production

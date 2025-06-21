@@ -50,6 +50,26 @@ Server runs on `http://localhost:3000` with endpoints:
 - `GET /health` - Health check
 - `POST /unthread-webhook` - Webhook endpoint
 
+## 🐳 Docker Setup
+
+```bash
+# Copy Docker template
+cp .env.docker.example .env.docker
+# Edit .env.docker with your secrets
+
+# Start Redis for Docker
+docker run -d --name docker-redis -p 6379:6379 redis:7-alpine
+
+# Run with Docker (using cloud builder)
+docker run --name docker-unthread-webhook-server --env-file .env.docker -p 3000:3000 --rm wgtechlabs/unthread-webhook-server:latest
+```
+
+**Environment Files:**
+
+- `.env` - Local development (Node.js directly)
+- `.env.docker` - Docker testing (`redis://host.docker.internal:6379`)
+- `.env.example` + `.env.docker.example` - Safe templates (committed to git)
+
 ## ⚙️ Configuration
 
 ### Environment Variables

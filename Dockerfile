@@ -10,8 +10,7 @@ WORKDIR /app
 COPY package.json yarn.lock .yarnrc ./
 
 # Install all dependencies (including devDependencies for building)
-RUN yarn config set strict-ssl false && \
-    yarn install --frozen-lockfile --ignore-scripts
+RUN yarn install --frozen-lockfile --ignore-scripts
 
 # Copy source code and build configuration
 COPY src/ ./src/
@@ -29,6 +28,8 @@ WORKDIR /app
 # Copy package manager files
 COPY package.json yarn.lock .yarnrc ./
 
+# Set environment to production
+ENV NODE_ENV=production
 # Install only production dependencies
 RUN yarn config set strict-ssl false && \
     yarn install --frozen-lockfile --production --ignore-scripts && \
@@ -53,7 +54,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+    CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
 # Start the application
 CMD ["node", "dist/app.js"]

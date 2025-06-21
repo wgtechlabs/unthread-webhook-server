@@ -53,22 +53,27 @@ Server runs on `http://localhost:3000` with endpoints:
 ## 🐳 Docker Setup
 
 ```bash
-# Copy Docker template
-cp .env.docker.example .env.docker
-# Edit .env.docker with your secrets
+# 1. Copy environment template
+cp .env.example .env
+# Edit .env with your webhook secret
 
-# Start Redis for Docker
-docker run -d --name docker-redis -p 6379:6379 redis:7-alpine
+# 2. Start with Docker Compose
+docker-compose up -d
 
-# Run with Docker (using cloud builder)
-docker run --name docker-unthread-webhook-server --env-file .env.docker -p 3000:3000 --rm wgtechlabs/unthread-webhook-server:latest
+# 3. Check status
+docker-compose ps
+
+# 4. View logs
+docker-compose logs -f
+
+# 5. Stop services
+docker-compose down
 ```
 
 **Environment Files:**
 
-- `.env` - Local development (Node.js directly)
-- `.env.docker` - Docker testing (`redis://host.docker.internal:6379`)
-- `.env.example` + `.env.docker.example` - Safe templates (committed to git)
+- `.env` - Single config file for both local development and Docker
+- `.env.example` - Template (Redis URL gets overridden automatically for Docker)
 
 ## ⚙️ Configuration
 

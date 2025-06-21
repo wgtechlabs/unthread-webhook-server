@@ -74,7 +74,8 @@ jobs:
           ALL_TAGS="$DOCKERHUB_TAGS,$GHCR_TAGS"
           
           echo "tags=$ALL_TAGS" >> $GITHUB_OUTPUT
-            - name: Build and push production images
+          
+      - name: Build and push production images
         uses: docker/build-push-action@v5
         with:
           context: .

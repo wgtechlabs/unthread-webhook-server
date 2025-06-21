@@ -50,6 +50,31 @@ Server runs on `http://localhost:3000` with endpoints:
 - `GET /health` - Health check
 - `POST /unthread-webhook` - Webhook endpoint
 
+## 🐳 Docker Setup
+
+```bash
+# 1. Copy environment template
+cp .env.example .env
+# Edit .env with your webhook secret
+
+# 2. Start with Docker Compose
+docker-compose up -d
+
+# 3. Check status
+docker-compose ps
+
+# 4. View logs
+docker-compose logs -f
+
+# 5. Stop services
+docker-compose down
+```
+
+**Environment Files:**
+
+- `.env` - Single config file for both local development and Docker
+- `.env.example` - Template (Redis URL gets overridden automatically for Docker)
+
 ## ⚙️ Configuration
 
 ### Environment Variables

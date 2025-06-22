@@ -1,51 +1,93 @@
-# Multi-stage build for Unthread Webhook Server
+# =============================================================================
+# UNTHREAD WEBHOOK SERVER - DOCKERFILE
+# =============================================================================
+# Multi-stage Docker build for the Unthread Webhook Server
+# 
+# Build stages:
+# 1. base    - Base Alpine image with Node.js and security updates
+# 2. deps    - Install production dependencies only
+# 3. build   - Install dev dependencies and build the application
+# 4. final   - Create minimal runtime image with built app
+#
+# Usage:
+#   docker build -t unthread-webhook-server .
+#   docker run --env-file .env unthread-webhook-server
+#
+# =============================================================================
 
-# Build stage
-FROM node:20-alpine AS builder
+# syntax=docker/dockerfile:1
 
-# Set working directory
-WORKDIR /app
+# Use Node.js 22.16 LTS Alpine with security patches
+ARG NODE_VERSION=22.16-alpine3.21
 
-# Copy package manager files
-COPY package.json yarn.lock .yarnrc ./
+# =============================================================================
+# STAGE 1: Base Image
+# =============================================================================
+# Alpine Linux 3.21 base for minimal image size with latest security updates
+FROM node:${NODE_VERSION} AS base
+
+# Install security updates for Alpine packages
+RUN apk update && apk upgrade && \
+    apk add --no-cache dumb-init && \
+    rm -rf /var/cache/apk/*
+
+# Set working directory for all subsequent stages
+WORKDIR /usr/src/app
+
+# =============================================================================
+# STAGE 2: Production Dependencies
+# =============================================================================
+# Install only production dependencies for runtime
+FROM base AS deps
+
+# Use bind mounts and cache for faster builds
+# Downloads dependencies without copying package files into the layer
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=yarn.lock,target=yarn.lock \
+    --mount=type=cache,target=/root/.yarn \
+    yarn install --production --frozen-lockfile
+
+# =============================================================================
+# STAGE 3: Build Application  
+# =============================================================================
+# Install dev dependencies and build the TypeScript application
+FROM deps AS build
 
 # Install all dependencies (including devDependencies for building)
-RUN yarn install --frozen-lockfile --ignore-scripts
+RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=yarn.lock,target=yarn.lock \
+    --mount=type=cache,target=/root/.yarn \
+    yarn install --frozen-lockfile
 
-# Copy source code and build configuration
-COPY src/ ./src/
-COPY tsconfig.json ./
+# Copy source code and build the application
+COPY . .
+RUN yarn run build
 
-# Build the TypeScript application
-RUN yarn build
+# =============================================================================
+# STAGE 4: Final Runtime Image
+# =============================================================================
+# Minimal production image with only necessary files
+FROM base AS final
 
-# Production stage
-FROM node:20-alpine AS production
+# Set production environment with security options
+ENV NODE_ENV=production \
+    NODE_OPTIONS="--enable-source-maps --max-old-space-size=512"
 
-# Set working directory
-WORKDIR /app
+# Create a dedicated user for the application
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 -G nodejs
 
-# Copy package manager files
-COPY package.json yarn.lock .yarnrc ./
+# Copy package.json for package manager commands
+COPY --chown=nodejs:nodejs package.json .
 
-# Set environment to production
-ENV NODE_ENV=production
-# Install only production dependencies
-RUN yarn install --frozen-lockfile --production --ignore-scripts && \
-    yarn cache clean
-
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+# Copy production dependencies and built application
+COPY --from=deps --chown=nodejs:nodejs /usr/src/app/node_modules ./node_modules
+COPY --from=build --chown=nodejs:nodejs /usr/src/app/dist ./dist
 
 # Copy environment example (for reference)
-COPY .env.example ./
+COPY --chown=nodejs:nodejs .env.example ./
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
-
-# Change ownership of the app directory to nodejs user
-RUN chown -R nodejs:nodejs /app
+# Switch to non-root user
 USER nodejs
 
 # Expose the port the app runs on
@@ -55,5 +97,6 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
 
-# Start the application
+# Use dumb-init for proper signal handling and start the application
+ENTRYPOINT ["dumb-init", "--"]
 CMD ["node", "dist/app.js"]

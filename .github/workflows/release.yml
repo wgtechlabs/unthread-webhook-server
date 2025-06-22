@@ -76,8 +76,7 @@ jobs:
           
           # Combine all tags
           ALL_TAGS="$DOCKERHUB_TAGS,$GHCR_TAGS"
-          
-          echo "tags=$ALL_TAGS" >> $GITHUB_OUTPUT
+            echo "tags=$ALL_TAGS" >> $GITHUB_OUTPUT
           
       - name: Build and push production images
         uses: docker/build-push-action@v5
@@ -88,14 +87,14 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           labels: |
             org.opencontainers.image.title=Unthread Webhook Server
-            org.opencontainers.image.description=A Node.js server application that receives webhook events from Unthread.io
+            org.opencontainers.image.description=A reliable, production-ready Node.js server for processing Unthread.io webhooks with signature verification and smart platform handling.
             org.opencontainers.image.version=${{ steps.version.outputs.version }}
             org.opencontainers.image.created=${{ steps.version.outputs.build_date }}
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.licenses=GPL-3.0
-            cache-from: type=gha
+          cache-from: type=gha
           cache-to: type=gha,mode=max
           
       - name: Run Trivy vulnerability scanner

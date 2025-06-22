@@ -50,6 +50,12 @@ Server runs on `http://localhost:3000` with endpoints:
 - `GET /health` - Health check
 - `POST /unthread-webhook` - Webhook endpoint
 
+## 🚂 One-Click Deploy
+
+Deploy instantly to Railway with a single click:
+
+[![deploy on railway](https://railway.com/button.svg)](https://railway.com/deploy/unthread-webhook-ser?referralCode=dTwT-i)
+
 ## 🐳 Docker Setup
 
 ```bash

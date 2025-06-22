@@ -2,7 +2,7 @@
 
 [![node](https://img.shields.io/badge/node-%3E%3D20-green.svg?style=flat-square&labelColor=181717&logo=node.js&logoColor=white)](https://nodejs.org/) [![typescript](https://img.shields.io/badge/typescript-5.x-blue.svg?style=flat-square&labelColor=181717&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs) [![release](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/license)
 
-A **production-ready Node.js webhook server** for Unthread.io integration. Built with TypeScript, Express.js, and Redis for reliable webhook event processing with HMAC signature verification and intelligent platform detection.
+A reliable, production-ready Node.js server for processing Unthread.io webhooks with signature verification and smart platform handling. Built with TypeScript, Express.js, and Redis, this webhook server provides secure HMAC-SHA256 signature validation, intelligent event deduplication, and seamless integration with multiple platforms including Discord and Telegram. The server automatically detects event sources, processes various webhook events (conversations, messages, status updates), and efficiently queues them through Redis for downstream consumption by your bot applications, ensuring reliable and scalable webhook processing for your Unthread.io integrations.
 
 ## 🤗 Special Thanks
 
@@ -53,27 +53,32 @@ Server runs on `http://localhost:3000` with endpoints:
 ## 🐳 Docker Setup
 
 ```bash
-# 1. Copy environment template
+# 1. Create external network (if not already created)
+docker network create unthread-integration-network
+
+# 2. Copy environment template
 cp .env.example .env
 # Edit .env with your webhook secret
 
-# 2. Start with Docker Compose
+# 3. Start with Docker Compose
 docker-compose up -d
 
-# 3. Check status
+# 4. Check status
 docker-compose ps
 
-# 4. View logs
-docker-compose logs -f
+# 5. View logs
+docker-compose logs -f webhook-server
+docker-compose logs -f redis-webhook
 
-# 5. Stop services
+# 6. Stop services
 docker-compose down
 ```
 
 **Environment Files:**
 
 - `.env` - Single config file for both local development and Docker
-- `.env.example` - Template (Redis URL gets overridden automatically for Docker)
+- `.env.example` - Template with default values
+- `.env.railway` - Railway deployment template
 
 ## ⚙️ Configuration
 

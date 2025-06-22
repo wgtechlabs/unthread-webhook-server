@@ -4,7 +4,7 @@ Any contributions are welcome, encouraged, and valued. See the following informa
 
 ## 📋 Code of Conduct
 
-This project and everyone participating in it is governed by the project's Code of Conduct. By participating, you are expected to uphold this code. Please report unacceptable behavior to <opensource@wgtechlabs.com>.
+This project and everyone participating in it is governed by the project's [Code of Conduct](./CODE_OF_CONDUCT.md). By participating, you are expected to uphold this code. Please report unacceptable behavior to <opensource@wgtechlabs.com>.
 
 ## 💖 How to Contribute
 
@@ -14,7 +14,7 @@ There are many ways to contribute to this open source project. Any contributions
 
 If you can write code then create a pull request to this repo and I will review your code. Please consider submitting your pull request to the `dev` branch. I will auto reject if you submit your pull request to the `main` branch.
 
-#### 🔧 Setup
+#### 🔧 Development Setup
 
 To get started with development:
 
@@ -44,6 +44,10 @@ To get started with development:
    brew services start redis             # macOS
    sudo systemctl start redis-server     # Linux
    docker run -d -p 6379:6379 redis:alpine  # Docker
+   
+   # OR for full Docker setup with proper naming:
+   docker network create unthread-integration-network
+   docker-compose up -d redis-webhook
    ```
 
 5. **Start the project in development mode**
@@ -97,11 +101,13 @@ src/
 #### 🎯 Development Guidelines
 
 - **TypeScript First**: All code must be written in TypeScript with strict type checking
+- **Structured Logging**: Use `@wgtechlabs/log-engine` for all logging with built-in PII protection and security features
 - **Error Handling**: Implement comprehensive error handling with detailed logging
 - **Package Manager**: Use Yarn exclusively (enforced via preinstall script)
 - **Code Style**: Follow existing patterns and maintain consistency
 - **Environment**: Use Node.js 20+ for development
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
+- **Webhook Integration**: Ensure compatibility with [`wgtechlabs/unthread-telegram-bot`](https://github.com/wgtechlabs/unthread-telegram-bot)
 
 #### 🧪 Testing Guidelines
 
@@ -153,10 +159,150 @@ For other bugs, please create an issue with:
 ### 💡 Feature Requests
 
 We welcome suggestions for new features! Please create an issue with:
+
 - Clear description of the feature
 - Use case and benefits
 - Any implementation considerations
 - Examples or mockups if applicable
+
+## 📊 Advanced Logging Security with Log Engine
+
+This project uses [`@wgtechlabs/log-engine`](https://github.com/wgtechlabs/log-engine) for enterprise-grade logging with built-in security features and comprehensive PII protection.
+
+### 🔒 **Automatic Security Features**
+
+**Zero Configuration PII Protection:**
+
+- **Automatic Redaction**: Passwords, tokens, emails, API keys, and 50+ sensitive patterns are automatically protected
+- **Deep Object Scanning**: Recursively scans nested objects and arrays for sensitive data
+- **Content Truncation**: Large payloads are automatically truncated to prevent log bloat
+- **Environment-Based Control**: Security automatically adapts based on NODE_ENV settings
+
+**Built-in Patterns Protected:**
+
+- **Authentication**: `password`, `token`, `apiKey`, `secret`, `jwt`, `auth`, `sessionId`
+- **Personal Info**: `email`, `phone`, `ssn`, `firstName`, `lastName`, `address`
+- **Financial**: `creditCard`, `cvv`, `bankAccount`, `routingNumber`
+- **System**: `clientSecret`, `privateKey`, `webhookSecret`, `unthreadSecret`
+
+### 🛡️ **Advanced Security Configuration**
+
+**Custom Enterprise Protection:**
+
+```javascript
+import { LogEngine } from '@wgtechlabs/log-engine';
+
+// Add custom patterns for enterprise-specific data
+LogEngine.addCustomRedactionPatterns([
+  /internal.*/i,        // Matches any field starting with "internal"
+  /company.*/i,         // Matches any field starting with "company"
+  /webhook.*/i,         // Matches webhook-specific fields
+  /unthread.*/i         // Matches unthread-specific fields
+]);
+
+// Add dynamic sensitive field names
+LogEngine.addSensitiveFields([
+  'webhookSecret', 
+  'unthreadWebhookSecret', 
+  'unthreadApiKey',
+  'redisPassword'
+]);
+```
+
+**Secure Logging Examples:**
+
+```javascript
+// ✅ Automatic protection - no configuration needed
+LogEngine.info('Webhook authentication', {
+  webhookId: '123456789',          // ✅ Visible
+  webhookSecret: 'secret123',      // ❌ [REDACTED]
+  targetPlatform: 'telegram',      // ✅ Visible
+  unthreadApiKey: 'key_123'        // ❌ [REDACTED]
+});
+
+// ✅ Event processing protection
+LogEngine.info('Event processing', {
+  eventType: 'message_created',     // ✅ Visible
+  eventId: 'evt_001',              // ✅ Visible
+  signature: 'sha256=...',         // ❌ [REDACTED]
+  payload: { /* large data */ }    // Automatically truncated
+});
+
+// ✅ Redis queue security
+LogEngine.info('Queue publishing', {
+  queueName: 'unthread-events',    // ✅ Visible
+  platform: 'unthread',           // ✅ Visible
+  redisUrl: 'redis://localhost',  // ❌ [REDACTED]
+  eventCount: 5                    // ✅ Visible
+});
+```
+
+### ⚙️ **Environment Configuration**
+
+**Production Security (Recommended):**
+
+```bash
+NODE_ENV=production           # Full PII protection enabled
+LOG_REDACTION_TEXT="[SECURE]" # Custom redaction text
+LOG_MAX_CONTENT_LENGTH=150    # Truncate large content
+```
+
+**Development Debugging:**
+
+```bash
+NODE_ENV=development          # Redaction disabled for debugging
+LOG_REDACTION_DISABLED=true   # Explicit disable
+DEBUG_FULL_PAYLOADS=true      # Show complete data
+```
+
+**Custom Security Configuration:**
+
+```bash
+# Custom sensitive fields (comma-separated)
+LOG_SENSITIVE_FIELDS="webhookSecret,unthreadSecret,redisPassword"
+
+# Custom redaction patterns (JSON array)
+LOG_CUSTOM_PATTERNS='["/internal.*/i", "/company.*/i"]'
+
+# Truncation settings
+LOG_MAX_CONTENT_LENGTH=200
+LOG_TRUNCATION_TEXT="... [CONFIDENTIAL_TRUNCATED]"
+```
+
+### 🔧 **Development & Debugging**
+
+**Raw Logging for Development:**
+
+```javascript
+// ⚠️ Use with caution - bypasses all redaction
+LogEngine.debugRaw('Full webhook payload', {
+  password: 'visible',          // ⚠️ Visible (not redacted)
+  apiKey: 'full-key-visible'    // ⚠️ Visible (not redacted)
+});
+
+// Temporary redaction bypass
+LogEngine.withoutRedaction().info('Debug mode', sensitiveData);
+
+// Test field redaction
+const isRedacted = LogEngine.testFieldRedaction('webhookSecret'); // true
+const currentConfig = LogEngine.getRedactionConfig();
+```
+
+### 📊 **Logging Benefits for This Webhook Server**
+
+**Security Compliance:**
+
+- **GDPR Ready**: Automatic PII protection for European compliance
+- **Data Minimization**: Only necessary data is logged
+- **Audit Trails**: Complete security event logging with timestamps
+- **Incident Response**: Quick identification of security events
+
+**Operational Benefits:**
+
+- **Color-Coded Output**: Easy visual identification of log levels (🔵 INFO, 🟡 WARN, 🔴 ERROR)
+- **Structured Logging**: Consistent format across all webhook components
+- **Performance Optimized**: Minimal overhead with intelligent processing
+- **TypeScript Support**: Full type safety and IDE integration
 
 ---
 

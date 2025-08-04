@@ -423,10 +423,10 @@
     "@types/node" "*"
     "@types/send" "*"
 
-"@wgtechlabs/log-engine@1.3.0":
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/@wgtechlabs/log-engine/-/log-engine-1.3.0.tgz#36de3fa0f30ef5febcc4ed70ed3d1a4494804efa"
-  integrity sha512-pg4LZzN7xgEzqJbU31/xWCcY/sXOWMd7xo642kvtsLC6OMvgW899Q5AX+yYLsMoN06B4960/MAUdUGksl9ZGzA==
+"@wgtechlabs/log-engine@2.2.0":
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/@wgtechlabs/log-engine/-/log-engine-2.2.0.tgz#1d731d42ba6cb9792137d0e77b26e8b9c2f06c62"
+  integrity sha512-TIvzfDPiWUWW7EX+kZ3q7id12inpe6t9n/OIX9ewIHaBeA7q8YY631f2RjHdkB33Wew9A0H1HGzTx98nKan+MQ==
 
 abbrev@^3.0.0, abbrev@^3.0.1:
   version "3.0.1"

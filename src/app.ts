@@ -4,12 +4,21 @@ import 'dotenv/config';
 import { config } from './config/env';
 
 import express, { Request, Response } from 'express';
-import { LogEngine } from '@wgtechlabs/log-engine';
+import { LogEngine, LogMode } from '@wgtechlabs/log-engine';
 import { WebhookController } from './controllers/webhookController';
 import { verifySignature } from './middleware/auth';
 import { validateEvent } from './middleware/validation';
 import { WebhookRequest } from './types';
 import { RedisService } from './services/redisService';
+
+// Configure LogEngine to use only local time (no ISO timestamp)
+LogEngine.configure({ 
+  mode: LogMode.DEBUG,
+  format: {
+    includeIsoTimestamp: false,
+    includeLocalTime: true
+  }
+});
 
 const app = express();
 const port = config.port;

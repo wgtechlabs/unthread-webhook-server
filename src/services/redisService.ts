@@ -46,7 +46,7 @@ export class RedisService {
             const eventJson = JSON.stringify(event);
             
             // Log the complete transformed event data
-            LogEngine.debug(`� TRANSFORMED WEBHOOK EVENT:`, {
+            LogEngine.debug(`⚡ TRANSFORMED WEBHOOK EVENT:`, {
                 eventId: event.data?.eventId || 'unknown',
                 completeTransformedData: event
             });

@@ -1,7 +1,7 @@
 import { LogEngine } from '@wgtechlabs/log-engine';
 import { RedisService } from './redisService';
 import { config } from '../config/env';
-import { redisEventConfig } from '../config/redis';
+import { FileAttachmentCorrelationUtil } from '../utils/fileAttachmentCorrelation';
 import { 
     UnthreadWebhookEvent, 
     RedisQueueMessage, 
@@ -12,9 +12,16 @@ import {
 
 export class WebhookService {
     private redisService: RedisService;
+    private fileAttachmentCorrelation: FileAttachmentCorrelationUtil;
 
     constructor() {
         this.redisService = new RedisService();
+        this.fileAttachmentCorrelation = new FileAttachmentCorrelationUtil();
+        
+        // Set up callback for processing buffered file events
+        this.fileAttachmentCorrelation.onBufferedEventReady = (event, sourcePlatform) => {
+            this.continueEventProcessing(event, sourcePlatform);
+        };
     }
 
     private async initializeServices(): Promise<void> {
@@ -37,15 +44,20 @@ export class WebhookService {
             return;
         }
 
-        // Detect platform source
+        // Detect platform source (enhanced with file attachment correlation)
         const sourcePlatform = this.detectPlatformSource(event);
         
-        // Transform and queue event
-        const transformedEvent = this.transformEvent(event, sourcePlatform);
-        await this.redisService.publishEvent(transformedEvent);
+        // Handle buffered events - they will be processed later via callback
+        if (sourcePlatform === 'buffered') {
+            LogEngine.info('File attachment event buffered for correlation', {
+                eventId: event.eventId,
+                hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event)
+            });
+            return; // Event will be processed later when correlation is available
+        }
         
-        // Mark as processed
-        await this.redisService.markEventProcessed(event.eventId);
+        // Continue with normal processing
+        await this.continueEventProcessing(event, sourcePlatform);
     }
 
     private transformEvent(unthreadEvent: UnthreadWebhookEvent, sourcePlatform: PlatformSource): RedisQueueMessage {
@@ -67,9 +79,10 @@ export class WebhookService {
     }
 
     /**
-     * Simplified platform source detection
+     * Enhanced platform source detection with file attachment correlation
      * - If conversation_updated → 'dashboard' (always administrative actions)
      * - If from dashboard → 'dashboard'
+     * - If file attachment with unknown source → attempt correlation or buffer
      * - If unknown → 'unknown' 
      * - Otherwise → use the actual target platform value from environment variable
      */
@@ -84,22 +97,49 @@ export class WebhookService {
             return 'unknown';
         }
 
+        // Extract platform source using existing logic
+        const detectedPlatform = this.extractBasicPlatformSource(event);
+        
+        // Enhanced logic for file attachment correlation
+        const hasFileAttachments = this.fileAttachmentCorrelation.hasFileAttachments(event);
+        const isSourceConfirmed = this.fileAttachmentCorrelation.isSourcePlatformConfirmed(detectedPlatform);
+        
+        if (hasFileAttachments && !isSourceConfirmed) {
+            // This is a file attachment event with unknown source - try correlation
+            LogEngine.debug(`File attachment detected with unknown source, attempting correlation (${event.eventId})`);
+            return this.fileAttachmentCorrelation.correlateFileEvent(event);
+        }
+        
+        if (isSourceConfirmed && !hasFileAttachments) {
+            // This is a message event with confirmed source - cache for correlation
+            LogEngine.debug(`Message event with confirmed source, caching for correlation (${event.eventId})`);
+            this.fileAttachmentCorrelation.cacheMessageEvent(event, detectedPlatform);
+        }
+        
+        return detectedPlatform;
+    }
+
+    /**
+     * Extract basic platform source using existing detection logic
+     * This is the original detectPlatformSource logic extracted for reuse
+     */
+    private extractBasicPlatformSource(event: UnthreadWebhookEvent): PlatformSource {
         // PRIMARY DETECTION: conversationUpdates field analysis (100% reliable)
-        const hasConversationUpdates = event.data.metadata?.event_payload?.conversationUpdates !== undefined;
+        const hasConversationUpdates = event.data?.metadata?.event_payload?.conversationUpdates !== undefined;
         
         if (hasConversationUpdates) {
             LogEngine.debug(`Platform detected via conversationUpdates: dashboard (${event.eventId})`);
             return 'dashboard';
         } else {
             // Check if metadata exists but conversationUpdates is missing
-            if (event.data.metadata?.event_payload && !hasConversationUpdates) {
+            if (event.data?.metadata?.event_payload && !hasConversationUpdates) {
                 LogEngine.debug(`Platform detected via missing conversationUpdates: ${config.targetPlatform} (${event.eventId})`);
                 return config.targetPlatform;
             }
         }
 
         // SECONDARY DETECTION: botName pattern matching (fallback)
-        if (event.data.botName) {
+        if (event.data?.botName) {
             const botName = event.data.botName;
             if (typeof botName === 'string') {
                 if (botName.startsWith('@')) {
@@ -149,5 +189,41 @@ export class WebhookService {
             isValid: errors.length === 0,
             errors: errors.length > 0 ? errors : undefined
         };
+    }
+
+    /**
+     * Continue processing a buffered file event with the correlated source platform
+     * This method is called by the correlation utility when a buffered event is ready
+     */
+    private async continueEventProcessing(event: UnthreadWebhookEvent, sourcePlatform: string): Promise<void> {
+        try {
+            LogEngine.info('Processing buffered file attachment event', {
+                eventId: event.eventId,
+                sourcePlatform,
+                correlationSuccess: sourcePlatform !== 'unknown'
+            });
+
+            // Transform and queue the event with the correlated source platform
+            const transformedEvent = this.transformEvent(event, sourcePlatform);
+            await this.redisService.publishEvent(transformedEvent);
+            
+            // Mark as processed
+            await this.redisService.markEventProcessed(event.eventId);
+            
+        } catch (error) {
+            LogEngine.error('Failed to process buffered file attachment event', {
+                eventId: event.eventId,
+                sourcePlatform,
+                error: error instanceof Error ? error.message : 'Unknown error'
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Clean up resources when service is destroyed
+     */
+    destroy(): void {
+        this.fileAttachmentCorrelation.destroy();
     }
 }

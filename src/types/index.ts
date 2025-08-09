@@ -65,11 +65,18 @@ export interface WebhookRequest extends Request<any, any, UnthreadWebhookEvent> 
 }
 
 // Attachment metadata for easier integration
+// GUARANTEE: If hasFiles is true, the corresponding data.files array exists with fileCount items
+// GUARANTEE: If hasFiles is false, this metadata represents empty/missing files
 export interface AttachmentMetadata {
+  /** True if data.files array exists and has content, false otherwise */
   hasFiles: boolean;
+  /** Number of files in data.files array (0 when hasFiles is false) */
   fileCount: number;
+  /** Total size in bytes of all files combined (0 when hasFiles is false) */
   totalSize: number;
+  /** Unique MIME types of all files (empty array when hasFiles is false) */
   types: string[];
+  /** Names of all files (empty array when hasFiles is false) */
   names: string[];
 }
 

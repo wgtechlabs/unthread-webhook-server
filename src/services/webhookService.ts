@@ -101,10 +101,14 @@ export class WebhookService {
 
     /**
      * Generate rich attachment metadata for easier integration
+     * 
+     * GUARANTEE: If hasFiles is true, data.files array exists with fileCount items
+     * GUARANTEE: If hasFiles is false, data.files is empty/missing or attachments field is omitted
      */
     private generateAttachmentMetadata(event: UnthreadWebhookEvent): AttachmentMetadata {
         const files = event.data?.files;
         
+        // Strict validation: must be a non-empty array
         if (!files || !Array.isArray(files) || files.length === 0) {
             return {
                 hasFiles: false,
@@ -120,6 +124,7 @@ export class WebhookService {
         const types = files.map(file => file.mimetype || file.filetype || 'unknown').filter(Boolean);
         const names = files.map(file => file.name || file.title || 'unnamed').filter(Boolean);
 
+        // GUARANTEE: If this returns hasFiles: true, data.files exists with fileCount items
         return {
             hasFiles: true,
             fileCount,

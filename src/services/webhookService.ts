@@ -58,6 +58,9 @@ export class WebhookService {
         
         // Handle buffered events - they will be processed later via callback
         if (sourcePlatform === 'buffered') {
+            // Mark buffered events as processed to prevent duplicate buffering on retries
+            await this.redisService.markEventProcessed(event.eventId);
+            
             LogEngine.info('File attachment event buffered for correlation', {
                 eventId: event.eventId,
                 hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event)

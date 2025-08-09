@@ -31,12 +31,30 @@ export class FileAttachmentCorrelationUtil {
 
   /**
    * Generate correlation key from event data
+   * Only includes defined, non-empty values to prevent "undefined" in keys and avoid collisions
    */
   generateCorrelationKey(event: UnthreadWebhookEvent): string {
     const data = event.data;
     if (!data) return '';
     
-    return `${data.conversationId}-${data.threadTs}-${data.channelId}-${data.teamId}`;
+    // Collect only defined, non-empty values for correlation key
+    const keyComponents = [
+      data.conversationId,
+      data.threadTs,
+      data.channelId,
+      data.teamId
+    ].filter(component => 
+      component !== undefined && 
+      component !== null && 
+      String(component).trim() !== ''
+    );
+    
+    // Return empty string if we don't have enough components for reliable correlation
+    if (keyComponents.length < 2) {
+      return '';
+    }
+    
+    return keyComponents.join('-');
   }
 
   /**

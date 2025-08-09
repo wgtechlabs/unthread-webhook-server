@@ -1,6 +1,6 @@
 {
   "name": "unthread-webhook-server",
-  "version": "1.0.0-beta.5.2",
+  "version": "1.0.0-beta.6",
   "description": "A reliable, production-ready Node.js server for processing Unthread.io webhooks with signature verification and smart platform handling.",
   "license": "GPL-3.0",
   "private": true,
@@ -32,7 +32,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@wgtechlabs/log-engine": "1.3.0",
+    "@wgtechlabs/log-engine": "2.2.0",
     "dotenv": "^16.4.0",
     "express": "^4.21.0",
     "express-validator": "^7.2.0",

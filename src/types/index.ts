@@ -53,7 +53,7 @@ export interface MessageEvent extends UnthreadWebhookEvent {
 }
 
 // Platform source types - indicates which platform initiated the event
-// Can be 'dashboard', 'unknown', or the actual target platform value from environment variable
+// Can be 'dashboard', 'unknown', 'buffered', or the actual target platform value from environment variable
 export type PlatformSource = string;
 
 // Union type for all webhook events
@@ -64,12 +64,29 @@ export interface WebhookRequest extends Request<any, any, UnthreadWebhookEvent> 
   rawBody: string;
 }
 
+// Attachment metadata for easier integration
+// GUARANTEE: If hasFiles is true, the corresponding data.files array exists with fileCount items
+// GUARANTEE: If hasFiles is false, this metadata represents empty/missing files
+export interface AttachmentMetadata {
+  /** True if data.files array exists and has content, false otherwise */
+  hasFiles: boolean;
+  /** Number of files in data.files array (0 when hasFiles is false) */
+  fileCount: number;
+  /** Total size in bytes of all files combined (0 when hasFiles is false) */
+  totalSize: number;
+  /** Unique MIME types of all files (empty array when hasFiles is false) */
+  types: string[];
+  /** Names of all files (empty array when hasFiles is false) */
+  names: string[];
+}
+
 // Redis queue message structure
 export interface RedisQueueMessage {
   platform: 'unthread';
   targetPlatform: string;
   type: UnthreadEventType;
   sourcePlatform?: string;
+  attachments?: AttachmentMetadata;
   data: {
     originalEvent: UnthreadEventType;
     eventId: string;
@@ -107,4 +124,29 @@ export interface ErrorResponse {
   error: string;
   details?: any;
   timestamp?: string;
+}
+
+// File attachment correlation utility types
+export interface FileAttachmentCorrelationEntry {
+  sourcePlatform: string;
+  messageEventId: string;
+  timestamp: number;
+}
+
+export interface FileAttachmentBufferedEvent {
+  eventData: UnthreadWebhookEvent;
+  correlationKey: string;
+  bufferedAt: number;
+  timeoutId: NodeJS.Timeout | null;
+}
+
+export interface FileAttachmentBufferedEvents {
+  events: FileAttachmentBufferedEvent[];
+  sharedTimeoutId: NodeJS.Timeout;
+}
+
+// Utility helper type
+export interface FileAttachmentDetectionResult {
+  hasFiles: boolean;
+  fileCount: number;
 }

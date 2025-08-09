@@ -1,6 +1,7 @@
 import { LogEngine } from '@wgtechlabs/log-engine';
 import { RedisService } from './redisService';
 import { config } from '../config/env';
+import { redisEventConfig } from '../config/redis';
 import { 
     UnthreadWebhookEvent, 
     RedisQueueMessage, 
@@ -36,34 +37,8 @@ export class WebhookService {
             return;
         }
 
-        // Detect platform source with enhanced logging
+        // Detect platform source
         const sourcePlatform = this.detectPlatformSource(event);
-        
-        // Enhanced audit logging for detection validation
-        if ((event.event === 'message_created' || event.event === 'conversation_updated') && event.data) {
-            if (event.event === 'message_created') {
-                const detectionSummary = [
-                    `Detection: ${sourcePlatform}`,
-                    `Event: ${event.eventId}`,
-                    `Conversation: ${event.data.conversationId}`,
-                    `ConversationUpdates: ${event.data.metadata?.event_payload?.conversationUpdates !== undefined ? 'present' : 'missing'}`,
-                    `BotName: ${event.data.botName}`,
-                    `External: ${event.data.isExternal}`
-                ].join(' | ');
-                
-                LogEngine.info(`Platform detection completed - ${detectionSummary}`);
-            } else if (event.event === 'conversation_updated') {
-                const detectionSummary = [
-                    `Detection: ${sourcePlatform}`,
-                    `Event: ${event.eventId}`,
-                    `Conversation: ${event.data.id}`,
-                    `Type: conversation_updated`,
-                    `Reason: administrative action`
-                ].join(' | ');
-                
-                LogEngine.info(`Platform detection completed - ${detectionSummary}`);
-            }
-        }
         
         // Transform and queue event
         const transformedEvent = this.transformEvent(event, sourcePlatform);
@@ -71,8 +46,6 @@ export class WebhookService {
         
         // Mark as processed
         await this.redisService.markEventProcessed(event.eventId);
-        
-        LogEngine.debug(`Event processed: ${event.event} (${event.eventId}) from ${sourcePlatform}`);
     }
 
     private transformEvent(unthreadEvent: UnthreadWebhookEvent, sourcePlatform: PlatformSource): RedisQueueMessage {

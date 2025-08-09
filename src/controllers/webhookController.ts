@@ -12,18 +12,22 @@ export class WebhookController {
         try {
             const { event, eventId } = req.body;
 
+            // Log raw incoming webhook data
+            LogEngine.debug(`🌐 RAW WEBHOOK RECEIVED:`, {
+                eventId,
+                completeRawData: req.body
+            });
+
             // Handle URL verification event (required by Unthread)
             if (event === 'url_verification') {
                 LogEngine.debug('URL verification event processed');
                 return res.status(200).json({ message: 'URL verified' });
             }
 
-            // Log event processing for debugging
-            LogEngine.debug(`Processing ${event} event (ID: ${eventId})`);
-
             // Validate the event structure
             const validationResult = this.webhookService.validateEvent(req.body);
             if (!validationResult.isValid) {
+                LogEngine.error(`❌ Event validation failed:`, validationResult.errors);
                 return res.status(400).json({ 
                     error: 'Invalid event structure',
                     details: validationResult.errors 
@@ -39,7 +43,7 @@ export class WebhookController {
                 timestamp: new Date().toISOString()
             });
         } catch (error) {
-            LogEngine.error(`Error handling webhook: ${error}`);
+            LogEngine.error(`💥 Error handling webhook: ${error}`);
             return res.status(500).json({
                 error: 'Internal server error',
                 timestamp: new Date().toISOString()

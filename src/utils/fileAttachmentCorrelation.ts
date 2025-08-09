@@ -79,6 +79,21 @@ export class FileAttachmentCorrelationUtil {
   cacheMessageEvent(event: UnthreadWebhookEvent, sourcePlatform: string): void {
     const correlationKey = this.generateCorrelationKey(event);
     
+    // Abort caching if correlation key is insufficient/empty to prevent collisions
+    if (!correlationKey || correlationKey.trim() === '') {
+      LogEngine.warn('Cannot cache message event - insufficient correlation data', {
+        messageEventId: event.eventId,
+        sourcePlatform,
+        eventData: {
+          conversationId: event.data?.conversationId,
+          threadTs: event.data?.threadTs,
+          channelId: event.data?.channelId,
+          teamId: event.data?.teamId
+        }
+      });
+      return; // Abort caching to prevent empty key collisions
+    }
+    
     const entry: FileAttachmentCorrelationEntry = {
       sourcePlatform,
       messageEventId: event.eventId,
@@ -105,6 +120,22 @@ export class FileAttachmentCorrelationUtil {
    */
   correlateFileEvent(event: UnthreadWebhookEvent): PlatformSource {
     const correlationKey = this.generateCorrelationKey(event);
+    
+    // Abort correlation if key is insufficient/empty to prevent collisions
+    if (!correlationKey || correlationKey.trim() === '') {
+      LogEngine.warn('Cannot correlate file attachment event - insufficient correlation data', {
+        fileEventId: event.eventId,
+        eventData: {
+          conversationId: event.data?.conversationId,
+          threadTs: event.data?.threadTs,
+          channelId: event.data?.channelId,
+          teamId: event.data?.teamId
+        },
+        fallbackTo: 'unknown'
+      });
+      return 'unknown'; // Fall back to unknown instead of attempting correlation
+    }
+    
     const correlationData = this.getCorrelationData(correlationKey);
     
     if (correlationData) {
@@ -128,6 +159,11 @@ export class FileAttachmentCorrelationUtil {
    * Get correlation data from cache (with TTL check)
    */
   private getCorrelationData(correlationKey: string): FileAttachmentCorrelationEntry | null {
+    // Safety check: return null for empty keys to prevent false lookups
+    if (!correlationKey || correlationKey.trim() === '') {
+      return null;
+    }
+    
     const expiration = this.correlationTTL.get(correlationKey);
     
     if (expiration && Date.now() > expiration) {
@@ -144,6 +180,20 @@ export class FileAttachmentCorrelationUtil {
    * Buffer file event for delayed processing
    */
   private bufferFileEvent(event: UnthreadWebhookEvent, correlationKey: string): void {
+    // Safety check: abort buffering if correlation key is empty to prevent collisions
+    if (!correlationKey || correlationKey.trim() === '') {
+      LogEngine.error('Cannot buffer file event - empty correlation key would cause collisions', {
+        fileEventId: event.eventId,
+        eventData: {
+          conversationId: event.data?.conversationId,
+          threadTs: event.data?.threadTs,
+          channelId: event.data?.channelId,
+          teamId: event.data?.teamId
+        }
+      });
+      return; // Abort buffering to prevent empty key collisions
+    }
+    
     // Get existing buffered events for this key
     const existing = this.bufferedEvents.get(correlationKey);
     
@@ -185,6 +235,18 @@ export class FileAttachmentCorrelationUtil {
         totalBufferedEvents: existing.events.length,
         bufferTimeout: this.FILE_ATTACHMENT_BUFFER_TIMEOUT
       });
+      
+      // Clear existing timeout before creating new one
+      if (existing.sharedTimeoutId) {
+        clearTimeout(existing.sharedTimeoutId);
+      }
+      
+      // Create new shared timeout for the updated buffer
+      const timeoutId = setTimeout(() => {
+        this.processBufferedEventsAsUnknown(correlationKey);
+      }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
+      existing.sharedTimeoutId = timeoutId;
+      
     } else {
       // Create new buffer with first event
       const bufferedEvent: FileAttachmentBufferedEvent = {
@@ -214,23 +276,20 @@ export class FileAttachmentCorrelationUtil {
         willExpireAt: new Date(Date.now() + this.FILE_ATTACHMENT_BUFFER_TIMEOUT).toISOString()
       });
     }
-    
-    // Create new shared timeout
-    const timeoutId = setTimeout(() => {
-      this.processBufferedEventsAsUnknown(correlationKey);
-    }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
-    
-    // Update the shared timeout
-    const currentBuffer = this.bufferedEvents.get(correlationKey);
-    if (currentBuffer) {
-      currentBuffer.sharedTimeoutId = timeoutId;
-    }
   }
 
   /**
    * Process buffered file events when correlation becomes available
    */
   private processBufferedFileEvent(correlationKey: string, sourcePlatform: string): void {
+    // Safety check: skip processing if correlation key is empty to prevent wrong event processing
+    if (!correlationKey || correlationKey.trim() === '') {
+      LogEngine.warn('Skipping buffered event processing - empty correlation key', {
+        sourcePlatform
+      });
+      return;
+    }
+    
     const bufferedEvents = this.bufferedEvents.get(correlationKey);
     
     if (bufferedEvents) {
@@ -264,6 +323,12 @@ export class FileAttachmentCorrelationUtil {
    * Process buffered events as unknown when timeout expires
    */
   private processBufferedEventsAsUnknown(correlationKey: string): void {
+    // Safety check: skip processing if correlation key is empty
+    if (!correlationKey || correlationKey.trim() === '') {
+      LogEngine.warn('Skipping timeout processing - empty correlation key');
+      return;
+    }
+    
     const bufferedEvents = this.bufferedEvents.get(correlationKey);
     
     if (bufferedEvents) {

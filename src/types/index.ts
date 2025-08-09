@@ -133,6 +133,11 @@ export interface FileAttachmentBufferedEvent {
   timeoutId: NodeJS.Timeout;
 }
 
+export interface FileAttachmentBufferedEvents {
+  events: FileAttachmentBufferedEvent[];
+  sharedTimeoutId: NodeJS.Timeout;
+}
+
 // Utility helper type
 export interface FileAttachmentDetectionResult {
   hasFiles: boolean;

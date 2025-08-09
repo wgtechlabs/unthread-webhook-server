@@ -3,6 +3,7 @@ import {
   UnthreadWebhookEvent, 
   FileAttachmentCorrelationEntry, 
   FileAttachmentBufferedEvent,
+  FileAttachmentBufferedEvents,
   PlatformSource 
 } from '../types';
 
@@ -19,7 +20,7 @@ export class FileAttachmentCorrelationUtil {
   // Memory storage for correlation
   private correlationCache = new Map<string, FileAttachmentCorrelationEntry>();
   private correlationTTL = new Map<string, number>();
-  private bufferedEvents = new Map<string, FileAttachmentBufferedEvent>();
+  private bufferedEvents = new Map<string, FileAttachmentBufferedEvents>();
   
   // Cleanup timer
   private cleanupTimer: NodeJS.Timeout | null = null;
@@ -125,78 +126,148 @@ export class FileAttachmentCorrelationUtil {
    * Buffer file event for delayed processing
    */
   private bufferFileEvent(event: UnthreadWebhookEvent, correlationKey: string): void {
-    // Clear any existing buffer for this key
+    // Get existing buffered events for this key
     const existing = this.bufferedEvents.get(correlationKey);
+    
     if (existing) {
-      clearTimeout(existing.timeoutId);
+      // Clear existing timeout
+      clearTimeout(existing.sharedTimeoutId);
+      
+      // Check for duplicate events (same eventId)
+      const isDuplicate = existing.events.some(e => e.eventData.eventId === event.eventId);
+      
+      if (isDuplicate) {
+        LogEngine.warn('Duplicate file attachment event detected, skipping buffer', {
+          eventId: event.eventId,
+          correlationKey,
+          existingEventCount: existing.events.length
+        });
+        
+        // Restore the timeout and return without adding duplicate
+        const timeoutId = setTimeout(() => {
+          this.processBufferedEventsAsUnknown(correlationKey);
+        }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
+        existing.sharedTimeoutId = timeoutId;
+        return;
+      }
+      
+      // Add new event to existing buffer
+      const bufferedEvent: FileAttachmentBufferedEvent = {
+        eventData: event,
+        correlationKey,
+        bufferedAt: Date.now(),
+        timeoutId: null as any // Will use shared timeout
+      };
+      
+      existing.events.push(bufferedEvent);
+      
+      LogEngine.info('Added file attachment event to existing buffer', {
+        eventId: event.eventId,
+        correlationKey,
+        totalBufferedEvents: existing.events.length,
+        bufferTimeout: this.FILE_ATTACHMENT_BUFFER_TIMEOUT
+      });
+    } else {
+      // Create new buffer with first event
+      const bufferedEvent: FileAttachmentBufferedEvent = {
+        eventData: event,
+        correlationKey,
+        bufferedAt: Date.now(),
+        timeoutId: null as any // Will use shared timeout
+      };
+      
+      // Create timeout for fallback processing
+      const timeoutId = setTimeout(() => {
+        this.processBufferedEventsAsUnknown(correlationKey);
+      }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
+      
+      // Store buffered events
+      const bufferedEvents: FileAttachmentBufferedEvents = {
+        events: [bufferedEvent],
+        sharedTimeoutId: timeoutId
+      };
+      
+      this.bufferedEvents.set(correlationKey, bufferedEvents);
+      
+      LogEngine.info('File attachment event buffered for correlation', {
+        eventId: event.eventId,
+        correlationKey,
+        bufferTimeout: this.FILE_ATTACHMENT_BUFFER_TIMEOUT,
+        willExpireAt: new Date(Date.now() + this.FILE_ATTACHMENT_BUFFER_TIMEOUT).toISOString()
+      });
     }
     
-    // Create timeout for fallback processing
+    // Create new shared timeout
     const timeoutId = setTimeout(() => {
-      this.processBufferedEventAsUnknown(correlationKey);
+      this.processBufferedEventsAsUnknown(correlationKey);
     }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
     
-    // Store buffered event
-    const bufferedEvent: FileAttachmentBufferedEvent = {
-      eventData: event,
-      correlationKey,
-      bufferedAt: Date.now(),
-      timeoutId
-    };
-    
-    this.bufferedEvents.set(correlationKey, bufferedEvent);
-    
-    LogEngine.info('File attachment event buffered for correlation', {
-      fileEventId: event.eventId,
-      correlationKey,
-      bufferTimeout: this.FILE_ATTACHMENT_BUFFER_TIMEOUT,
-      willExpireAt: new Date(Date.now() + this.FILE_ATTACHMENT_BUFFER_TIMEOUT).toISOString()
-    });
+    // Update the shared timeout
+    const currentBuffer = this.bufferedEvents.get(correlationKey);
+    if (currentBuffer) {
+      currentBuffer.sharedTimeoutId = timeoutId;
+    }
   }
 
   /**
-   * Process buffered file event when correlation becomes available
+   * Process buffered file events when correlation becomes available
    */
   private processBufferedFileEvent(correlationKey: string, sourcePlatform: string): void {
-    const bufferedEvent = this.bufferedEvents.get(correlationKey);
+    const bufferedEvents = this.bufferedEvents.get(correlationKey);
     
-    if (bufferedEvent) {
-      // Cancel timeout
-      clearTimeout(bufferedEvent.timeoutId);
+    if (bufferedEvents) {
+      // Cancel shared timeout
+      clearTimeout(bufferedEvents.sharedTimeoutId);
       
       // Remove from buffer
       this.bufferedEvents.delete(correlationKey);
       
-      LogEngine.info('Processing buffered file attachment with correlation', {
-        fileEventId: bufferedEvent.eventData.eventId,
+      LogEngine.info('Processing buffered file attachments with correlation', {
         correlationKey,
         sourcePlatform,
-        bufferedFor: Date.now() - bufferedEvent.bufferedAt
+        eventCount: bufferedEvents.events.length,
+        eventIds: bufferedEvents.events.map(e => e.eventData.eventId)
       });
       
-      // Trigger callback to continue processing
-      this.onBufferedEventReady?.(bufferedEvent.eventData, sourcePlatform);
+      // Process each buffered event
+      bufferedEvents.events.forEach((bufferedEvent, index) => {
+        LogEngine.debug(`Processing buffered event ${index + 1}/${bufferedEvents.events.length}`, {
+          eventId: bufferedEvent.eventData.eventId,
+          bufferedFor: Date.now() - bufferedEvent.bufferedAt
+        });
+        
+        // Trigger callback to continue processing
+        this.onBufferedEventReady?.(bufferedEvent.eventData, sourcePlatform);
+      });
     }
   }
 
   /**
-   * Process buffered event as unknown when timeout expires
+   * Process buffered events as unknown when timeout expires
    */
-  private processBufferedEventAsUnknown(correlationKey: string): void {
-    const bufferedEvent = this.bufferedEvents.get(correlationKey);
+  private processBufferedEventsAsUnknown(correlationKey: string): void {
+    const bufferedEvents = this.bufferedEvents.get(correlationKey);
     
-    if (bufferedEvent) {
+    if (bufferedEvents) {
       this.bufferedEvents.delete(correlationKey);
       
-      LogEngine.warn('File attachment event timed out waiting for correlation', {
-        fileEventId: bufferedEvent.eventData.eventId,
+      LogEngine.warn('File attachment events timed out waiting for correlation', {
         correlationKey,
-        bufferedFor: Date.now() - bufferedEvent.bufferedAt,
+        eventCount: bufferedEvents.events.length,
+        eventIds: bufferedEvents.events.map(e => e.eventData.eventId),
         processedAs: 'unknown'
       });
       
-      // Process as unknown
-      this.onBufferedEventReady?.(bufferedEvent.eventData, 'unknown');
+      // Process each buffered event as unknown
+      bufferedEvents.events.forEach((bufferedEvent, index) => {
+        LogEngine.debug(`Processing timed-out event ${index + 1}/${bufferedEvents.events.length} as unknown`, {
+          eventId: bufferedEvent.eventData.eventId,
+          bufferedFor: Date.now() - bufferedEvent.bufferedAt
+        });
+        
+        // Process as unknown
+        this.onBufferedEventReady?.(bufferedEvent.eventData, 'unknown');
+      });
     }
   }
 
@@ -226,14 +297,20 @@ export class FileAttachmentCorrelationUtil {
     }
     
     // Cleanup any stale buffered events (shouldn't happen but safety check)
-    for (const [key, bufferedEvent] of this.bufferedEvents.entries()) {
-      if (now - bufferedEvent.bufferedAt > this.FILE_ATTACHMENT_BUFFER_TIMEOUT + 5000) {
-        clearTimeout(bufferedEvent.timeoutId);
+    for (const [key, bufferedEvents] of this.bufferedEvents.entries()) {
+      // Check if any event in the buffer is too old
+      const hasStaleEvents = bufferedEvents.events.some(event => 
+        now - event.bufferedAt > this.FILE_ATTACHMENT_BUFFER_TIMEOUT + 5000
+      );
+      
+      if (hasStaleEvents) {
+        clearTimeout(bufferedEvents.sharedTimeoutId);
         this.bufferedEvents.delete(key);
         cleanedCount++;
-        LogEngine.warn('Cleaned up stale buffered file attachment event', {
-          fileEventId: bufferedEvent.eventData.eventId,
-          correlationKey: key
+        LogEngine.warn('Cleaned up stale buffered file attachment events', {
+          correlationKey: key,
+          eventCount: bufferedEvents.events.length,
+          eventIds: bufferedEvents.events.map(e => e.eventData.eventId)
         });
       }
     }
@@ -276,8 +353,8 @@ export class FileAttachmentCorrelationUtil {
     }
     
     // Clear all timeouts
-    for (const bufferedEvent of this.bufferedEvents.values()) {
-      clearTimeout(bufferedEvent.timeoutId);
+    for (const bufferedEvents of this.bufferedEvents.values()) {
+      clearTimeout(bufferedEvents.sharedTimeoutId);
     }
     
     // Clear all data

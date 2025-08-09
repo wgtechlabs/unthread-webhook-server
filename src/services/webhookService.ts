@@ -20,8 +20,16 @@ export class WebhookService {
         this.fileAttachmentCorrelation = new FileAttachmentCorrelationUtil();
         
         // Set up callback for processing buffered file events
-        this.fileAttachmentCorrelation.onBufferedEventReady = (event, sourcePlatform) => {
-            this.continueEventProcessing(event, sourcePlatform);
+        this.fileAttachmentCorrelation.onBufferedEventReady = async (event, sourcePlatform) => {
+            try {
+                await this.continueEventProcessing(event, sourcePlatform);
+            } catch (error) {
+                LogEngine.error('Failed to process buffered file attachment event in callback', {
+                    eventId: event.eventId,
+                    sourcePlatform,
+                    error: error instanceof Error ? error.message : 'Unknown error'
+                });
+            }
         };
     }
 

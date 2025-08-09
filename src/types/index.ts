@@ -54,7 +54,7 @@ export interface MessageEvent extends UnthreadWebhookEvent {
 
 // Platform source types - indicates which platform initiated the event
 // Can be 'dashboard', 'unknown', 'buffered', or the actual target platform value from environment variable
-export type PlatformSource = string | 'buffered';
+export type PlatformSource = string;
 
 // Union type for all webhook events
 export type WebhookEvent = UrlVerificationEvent | ConversationEvent | MessageEvent;
@@ -137,7 +137,7 @@ export interface FileAttachmentBufferedEvent {
   eventData: UnthreadWebhookEvent;
   correlationKey: string;
   bufferedAt: number;
-  timeoutId: NodeJS.Timeout;
+  timeoutId: NodeJS.Timeout | null;
 }
 
 export interface FileAttachmentBufferedEvents {

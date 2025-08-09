@@ -224,7 +224,7 @@ export class FileAttachmentCorrelationUtil {
         eventData: event,
         correlationKey,
         bufferedAt: Date.now(),
-        timeoutId: null as any // Will use shared timeout
+        timeoutId: null // Will use shared timeout
       };
       
       existing.events.push(bufferedEvent);
@@ -253,7 +253,7 @@ export class FileAttachmentCorrelationUtil {
         eventData: event,
         correlationKey,
         bufferedAt: Date.now(),
-        timeoutId: null as any // Will use shared timeout
+        timeoutId: null // Will use shared timeout
       };
       
       // Create timeout for fallback processing

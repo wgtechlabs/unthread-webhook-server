@@ -64,12 +64,22 @@ export interface WebhookRequest extends Request<any, any, UnthreadWebhookEvent> 
   rawBody: string;
 }
 
+// Attachment metadata for easier integration
+export interface AttachmentMetadata {
+  hasFiles: boolean;
+  fileCount: number;
+  totalSize: number;
+  types: string[];
+  names: string[];
+}
+
 // Redis queue message structure
 export interface RedisQueueMessage {
   platform: 'unthread';
   targetPlatform: string;
   type: UnthreadEventType;
   sourcePlatform?: string;
+  attachments?: AttachmentMetadata;
   data: {
     originalEvent: UnthreadEventType;
     eventId: string;

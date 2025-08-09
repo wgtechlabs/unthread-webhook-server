@@ -7,7 +7,8 @@ import {
     RedisQueueMessage, 
     UnthreadEventType, 
     ValidationResult, 
-    PlatformSource
+    PlatformSource,
+    AttachmentMetadata
 } from '../types';
 
 export class WebhookService {
@@ -62,7 +63,9 @@ export class WebhookService {
 
     private transformEvent(unthreadEvent: UnthreadWebhookEvent, sourcePlatform: PlatformSource): RedisQueueMessage {
         const targetPlatform = config.targetPlatform;
-        return {
+        const attachmentMetadata = this.generateAttachmentMetadata(unthreadEvent);
+        
+        const message: RedisQueueMessage = {
             platform: "unthread",
             targetPlatform,
             type: unthreadEvent.event,
@@ -75,6 +78,43 @@ export class WebhookService {
                 webhookTimestamp: unthreadEvent.webhookTimestamp
             },
             timestamp: Date.now()
+        };
+
+        // Add attachment metadata if files are present
+        if (attachmentMetadata.hasFiles) {
+            message.attachments = attachmentMetadata;
+        }
+
+        return message;
+    }
+
+    /**
+     * Generate rich attachment metadata for easier integration
+     */
+    private generateAttachmentMetadata(event: UnthreadWebhookEvent): AttachmentMetadata {
+        const files = event.data?.files;
+        
+        if (!files || !Array.isArray(files) || files.length === 0) {
+            return {
+                hasFiles: false,
+                fileCount: 0,
+                totalSize: 0,
+                types: [],
+                names: []
+            };
+        }
+
+        const fileCount = files.length;
+        const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
+        const types = files.map(file => file.mimetype || file.filetype || 'unknown').filter(Boolean);
+        const names = files.map(file => file.name || file.title || 'unnamed').filter(Boolean);
+
+        return {
+            hasFiles: true,
+            fileCount,
+            totalSize,
+            types: [...new Set(types)], // Remove duplicates
+            names
         };
     }
 

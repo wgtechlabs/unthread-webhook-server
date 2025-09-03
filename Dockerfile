@@ -44,7 +44,7 @@ FROM base AS deps
 # Downloads dependencies without copying package files into the layer
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=yarn.lock,target=yarn.lock \
-    --mount=type=cache,target=/root/.yarn \
+    --mount=type=cache,id=yarn-cache,target=/root/.yarn \
     yarn install --production --frozen-lockfile
 
 # =============================================================================
@@ -56,7 +56,7 @@ FROM deps AS build
 # Install all dependencies (including devDependencies for building)
 RUN --mount=type=bind,source=package.json,target=package.json \
     --mount=type=bind,source=yarn.lock,target=yarn.lock \
-    --mount=type=cache,target=/root/.yarn \
+    --mount=type=cache,id=yarn-cache,target=/root/.yarn \
     yarn install --frozen-lockfile
 
 # Copy source code and build the application

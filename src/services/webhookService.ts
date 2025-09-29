@@ -40,6 +40,8 @@ export class WebhookService {
     }
 
     async processEvent(event: UnthreadWebhookEvent): Promise<void> {
+        const startTime = Date.now();
+        
         if (!this.validateEvent(event).isValid) {
             throw new Error('Invalid event structure');
         }
@@ -61,15 +63,24 @@ export class WebhookService {
             // Mark buffered events as processed to prevent duplicate buffering on retries
             await this.redisService.markEventProcessed(event.eventId);
             
+            const processingTime = Date.now() - startTime;
             LogEngine.info('File attachment event buffered for correlation', {
                 eventId: event.eventId,
-                hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event)
+                hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event),
+                processingTime: `${processingTime}ms`
             });
             return; // Event will be processed later when correlation is available
         }
         
         // Continue with normal processing
         await this.continueEventProcessing(event, sourcePlatform);
+        
+        const totalProcessingTime = Date.now() - startTime;
+        LogEngine.debug(`Event processing completed`, {
+            eventId: event.eventId,
+            sourcePlatform,
+            totalProcessingTime: `${totalProcessingTime}ms`
+        });
     }
 
     private transformEvent(unthreadEvent: UnthreadWebhookEvent, sourcePlatform: PlatformSource): RedisQueueMessage {

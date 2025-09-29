@@ -13,11 +13,7 @@ import { RedisService } from './services/redisService';
 
 // Configure LogEngine to use only local time (no ISO timestamp)
 LogEngine.configure({ 
-  mode: LogMode.DEBUG,
-  format: {
-    includeIsoTimestamp: false,
-    includeLocalTime: true
-  }
+  mode: LogMode.DEBUG
 });
 
 const app = express();
@@ -35,22 +31,28 @@ app.use(
 
 const webhookController = new WebhookController();
 
-// Health check endpoint with Redis check
+// Initialize background processor for async webhook processing
+WebhookController.initializeBackgroundProcessor();
+
+// Health check endpoint with Redis and background processor check
 app.get('/health', async (req: Request, res: Response) => {
     try {
         const redisService = new RedisService();
         const isConnected = redisService.isConnected();
+        const backgroundStatus = WebhookController.getBackgroundProcessorStatus();
         
-        if (isConnected) {
+        if (isConnected && backgroundStatus.initialized) {
             res.status(200).json({ 
                 status: 'OK', 
                 redis: 'connected',
+                backgroundProcessor: 'initialized',
                 timestamp: new Date().toISOString() 
             });
         } else {
             res.status(503).json({ 
                 status: 'ERROR', 
-                redis: 'disconnected',
+                redis: isConnected ? 'connected' : 'disconnected',
+                backgroundProcessor: backgroundStatus.initialized ? 'initialized' : 'not_initialized',
                 timestamp: new Date().toISOString() 
             });
         }

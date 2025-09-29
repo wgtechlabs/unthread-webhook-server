@@ -116,6 +116,8 @@ export interface ValidationResult {
 export interface WebhookResponse {
   message: string;
   eventId?: string;
+  requestId?: string;
+  responseTime?: string;
   timestamp?: string;
 }
 
@@ -123,6 +125,7 @@ export interface WebhookResponse {
 export interface ErrorResponse {
   error: string;
   details?: any;
+  responseTime?: string;
   timestamp?: string;
 }
 

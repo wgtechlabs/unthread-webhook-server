@@ -1,7 +1,7 @@
 import { Response } from 'express';
 import { LogEngine } from '@wgtechlabs/log-engine';
 import { WebhookService } from '../services/webhookService';
-import { WebhookRequest, WebhookResponse, ErrorResponse } from '../types';
+import { WebhookRequest, WebhookResponse, ErrorResponse, UnthreadWebhookEvent } from '../types';
 
 export class WebhookController {
     private webhookService: WebhookService;
@@ -93,19 +93,21 @@ export class WebhookController {
     /**
      * Queue event for background processing (non-blocking)
      */
-    private queueEventForBackgroundProcessing(event: any, requestId: string): void {
+    private queueEventForBackgroundProcessing(event: UnthreadWebhookEvent, requestId: string): void {
         // Use setImmediate to ensure this runs after response is sent
         setImmediate(async () => {
             try {
                 if (WebhookController.backgroundProcessor) {
                     await WebhookController.backgroundProcessor.processEventInBackground(event, requestId);
                 } else {
-                    LogEngine.error('Background processor not initialized');
+                    // Safe fallback: process with current instance instead of dropping
+                    LogEngine.warn('Background processor not initialized, processing with current instance');
+                    await this.processEventInBackground(event, requestId);
                 }
             } catch (error) {
                 LogEngine.error(`💥 Background processing failed:`, {
                     requestId,
-                    eventId: event.eventId,
+                    eventId: event?.eventId,
                     error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
@@ -115,12 +117,12 @@ export class WebhookController {
     /**
      * Process event in background (this is where the heavy lifting happens)
      */
-    private async processEventInBackground(event: any, requestId: string): Promise<void> {
+    private async processEventInBackground(event: UnthreadWebhookEvent, requestId: string): Promise<void> {
         const startTime = Date.now();
         
         try {
             LogEngine.debug(`🔄 Background processing started`, {
-                eventId: event.eventId,
+                eventId: event?.eventId,
                 requestId
             });
 
@@ -130,7 +132,7 @@ export class WebhookController {
             
             const processingTime = Date.now() - startTime;
             LogEngine.info(`✅ Background processing completed`, {
-                eventId: event.eventId,
+                eventId: event?.eventId,
                 requestId,
                 processingTime: `${processingTime}ms`
             });
@@ -138,7 +140,7 @@ export class WebhookController {
         } catch (error) {
             const processingTime = Date.now() - startTime;
             LogEngine.error(`💥 Background processing failed:`, {
-                eventId: event.eventId,
+                eventId: event?.eventId,
                 requestId,
                 processingTime: `${processingTime}ms`,
                 error: error instanceof Error ? error.message : 'Unknown error'

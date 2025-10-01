@@ -150,7 +150,7 @@ export class FileAttachmentCorrelationUtil {
       return correlationData.sourcePlatform;
     }
     
-    // No correlation found - buffer the file event
+    // No correlation found - buffer the event and wait
     this.bufferFileEvent(event, correlationKey);
     return 'buffered';
   }

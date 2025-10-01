@@ -14,11 +14,8 @@
 #
 # Prerequisites: 
 #   - Copy .env.example to .env and configure your tokens
-#   - Ensure external network exists: docker network create unthread-integration-network
 #
 # =============================================================================
-
-version: '3.8'
 
 services:
   # =============================================================================
@@ -26,7 +23,8 @@ services:
   # =============================================================================
   # Dedicated Redis instance for webhook message queuing and communication
   redis-webhook:
-    image: redis:7-alpine
+    image: redis:8-alpine
+    container_name: redis-webhook
     ports:
       - "6379:6379"
     volumes:
@@ -35,25 +33,24 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
-      timeout: 3s
+      timeout: 10s
       retries: 3
-      start_period: 30s
-    networks:
-      - unthread-integration-network
+      start_period: 40s
+    command: redis-server --appendonly yes
 
   # =============================================================================
   # WEBHOOK SERVER APPLICATION
   # =============================================================================
   # Handles incoming webhooks from Unthread and processes them
   webhook-server:
-    image: wgtechlabs/unthread-webhook-server:latest
-    container_name: docker-unthread-webhook-server
+    build: .  # Build from local Dockerfile to use current codebase
+    image: unthread-webhook-server:local  # Custom image name for local builds
+    # image: wgtechlabs/unthread-webhook-server:latest  # Uncomment to use Docker Hub image
+    container_name: unthread-webhook-server
     ports:
       - "3000:3000"
     env_file:
       - .env
-    environment:
-      - REDIS_URL=redis://redis-webhook:6379
     depends_on:
       redis-webhook:
         condition: service_healthy
@@ -64,8 +61,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - unthread-integration-network
 
 # =============================================================================
 # PERSISTENT VOLUMES
@@ -73,12 +68,3 @@ services:
 # Named volumes for data persistence across container restarts
 volumes:
   redis_webhook_data:    # Redis webhook queue data
-
-# =============================================================================
-# NETWORKING
-# =============================================================================
-# External network for communication between services
-# Create with: docker network create unthread-integration-network
-networks:
-  unthread-integration-network:
-    external: true

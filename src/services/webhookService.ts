@@ -58,6 +58,12 @@ export class WebhookService {
         // Detect platform source (enhanced with file attachment correlation)
         const sourcePlatform = this.detectPlatformSource(event);
         
+        LogEngine.debug(`Platform source detected: ${sourcePlatform}`, {
+            eventId: event.eventId,
+            eventType: event.event,
+            hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event)
+        });
+        
         // Handle buffered events - they will be processed later via callback
         if (sourcePlatform === 'buffered') {
             // Mark buffered events as processed to prevent duplicate buffering on retries
@@ -219,6 +225,16 @@ export class WebhookService {
             }
         }
 
+        // TERTIARY DETECTION: isExternal flag (additional indicator for file attachments)
+        if (event.data?.isExternal === true) {
+            LogEngine.debug(`Platform detected via isExternal flag: dashboard (${event.eventId})`);
+            return 'dashboard';
+        } else if (event.data?.isExternal === false && event.data?.sourceType) {
+            // isExternal: false usually indicates platform -> dashboard direction
+            LogEngine.debug(`Platform detected via isExternal flag: ${config.targetPlatform} (${event.eventId})`);
+            return config.targetPlatform;
+        }
+
         // FALLBACK: Unknown if no reliable indicators found
         LogEngine.warn(`Unable to detect platform source for event ${event.eventId} - insufficient indicators`);
         return 'unknown';
@@ -264,13 +280,13 @@ export class WebhookService {
      */
     private async continueEventProcessing(event: UnthreadWebhookEvent, sourcePlatform: string): Promise<void> {
         try {
-            LogEngine.info('Processing buffered file attachment event', {
+            LogEngine.info('Processing webhook event', {
                 eventId: event.eventId,
                 sourcePlatform,
-                correlationSuccess: sourcePlatform !== 'unknown'
+                hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event)
             });
 
-            // Transform and queue the event with the correlated source platform
+            // Transform and queue the event with the detected/correlated source platform
             const transformedEvent = this.transformEvent(event, sourcePlatform);
             await this.redisService.publishEvent(transformedEvent);
             
@@ -278,7 +294,7 @@ export class WebhookService {
             await this.redisService.markEventProcessed(event.eventId);
             
         } catch (error) {
-            LogEngine.error('Failed to process buffered file attachment event', {
+            LogEngine.error('Failed to process webhook event', {
                 eventId: event.eventId,
                 sourcePlatform,
                 error: error instanceof Error ? error.message : 'Unknown error'

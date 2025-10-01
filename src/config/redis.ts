@@ -36,11 +36,13 @@ export const redisEventConfig = {
     keyPrefix: 'unthread:eventid:',
 };
 
-// Create Redis client for v4.x - use URL string directly with timeout
+// Create Redis client for v4.x - Railway-optimized configuration
 const client = createClient({ 
     url: redisConfig.url,
     socket: {
-        connectTimeout: 5000 // 5 second timeout
+        connectTimeout: 10000,      // 10 seconds for initial connection - Railway optimized
+        keepAlive: 30000,          // Keep connection alive (30 seconds)
+        noDelay: true,             // Disable Nagle's algorithm for better latency
     }
 });
 

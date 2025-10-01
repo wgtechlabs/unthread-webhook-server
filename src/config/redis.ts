@@ -29,11 +29,11 @@ function parseRedisConfig() {
 
 const redisConfig = parseRedisConfig();
 
-// Event tracking configuration - hardcoded values
+// Event tracking configuration - Redis 8-alpine optimized
 export const redisEventConfig = {
-    // Event tracking configuration
-    eventTtl: 259200, // 3 days (72 hours * 60 minutes * 60 seconds)
-    keyPrefix: 'unthread:eventid:',
+    // Event tracking configuration - reduced TTL for Redis 8 performance
+    eventTtl: 86400, // 1 day instead of 3 days (faster cleanup, less memory pressure)
+    keyPrefix: 'ue:', // Shorter prefix for Redis 8 efficiency
 };
 
 // Create Redis client for v4.x - Railway-optimized configuration

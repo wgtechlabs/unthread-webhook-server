@@ -14,24 +14,51 @@ export class RedisService {
         try {
             // Check if already connected
             if (this.client.isOpen) {
-                LogEngine.debug('Redis connection already established');
+                LogEngine.debug('Redis 8-alpine connection already established');
                 return;
             }
 
-            LogEngine.debug('Attempting Redis connection...');
+            LogEngine.debug('Attempting Redis 8-alpine connection...');
             
-            // Set a timeout for the connection attempt
+            // Redis 8-alpine optimized connection with shorter timeout
             const connectPromise = this.client.connect();
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Redis connection timeout after 10 seconds')), 10000);
+                setTimeout(() => reject(new Error('Redis 8-alpine connection timeout after 8 seconds')), 8000);
             });
             
             await Promise.race([connectPromise, timeoutPromise]);
             
+            // Redis 8-alpine health check
+            await this.healthCheck();
+            
             // Connection success is logged by the 'ready' event handler in redis.ts
         } catch (err) {
-            LogEngine.error(`Redis connection failed: ${err}`);
+            LogEngine.error(`Redis 8-alpine connection failed: ${err}`);
             throw err;
+        }
+    }
+
+    /**
+     * Redis 8-alpine health check
+     */
+    private async healthCheck(): Promise<void> {
+        try {
+            const pong = await this.executeWithRetry(
+                () => this.client.ping(),
+                'health check ping',
+                1, // Single attempt for health check
+                0, // No delay for health check
+                2000 // 2 second timeout for ping
+            );
+            
+            if (pong !== 'PONG') {
+                throw new Error(`Redis 8-alpine health check failed: expected PONG, got ${pong}`);
+            }
+            
+            LogEngine.debug('Redis 8-alpine health check passed');
+        } catch (error) {
+            LogEngine.warn(`Redis 8-alpine health check failed: ${error}`);
+            // Don't throw - connection might still work for operations
         }
     }
 
@@ -67,23 +94,23 @@ export class RedisService {
     }
 
     /**
-     * Railway-optimized retry logic for Redis operations with timeout handling
+     * Redis 8-alpine & Railway-optimized retry logic for operations
      */
     private async executeWithRetry<T>(
         operation: () => Promise<T>,
         operationName: string,
         maxRetries: number = 3,
-        baseDelay: number = 1000,
-        operationTimeout: number = 8000 // 8 seconds for individual operations
+        baseDelay: number = 500, // Faster initial retry for Redis 8
+        operationTimeout: number = 5000 // Reduced to 5s for Redis 8-alpine
     ): Promise<T> {
         let lastError: Error = new Error('Unknown error');
         
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                // Wrap operation with timeout for Railway optimization
+                // Redis 8-alpine optimized timeout wrapper
                 const timeoutPromise = new Promise<never>((_, reject) => {
                     setTimeout(() => {
-                        reject(new Error(`Redis operation ${operationName} timed out after ${operationTimeout}ms`));
+                        reject(new Error(`Redis operation ${operationName} timed out after ${operationTimeout}ms (Redis 8-alpine)`));
                     }, operationTimeout);
                 });
                 
@@ -92,26 +119,29 @@ export class RedisService {
                 lastError = error as Error;
                 
                 if (attempt === maxRetries) {
-                    LogEngine.error(`Redis operation ${operationName} failed after ${maxRetries} attempts: ${lastError.message}`);
+                    LogEngine.error(`Redis 8 operation ${operationName} failed after ${maxRetries} attempts: ${lastError.message}`);
                     break;
                 }
                 
-                // Check if it's a timeout or connection error
+                // Redis 8-alpine specific error patterns
                 const isRetryableError = (
                     lastError.message.includes('ETIMEDOUT') ||
                     lastError.message.includes('ECONNRESET') ||
                     lastError.message.includes('ENOTFOUND') ||
                     lastError.message.includes('Connection is closed') ||
-                    lastError.message.includes('timed out')
+                    lastError.message.includes('timed out') ||
+                    lastError.message.includes('Redis 8-alpine') ||
+                    lastError.message.includes('LOADING') // Redis 8 loading state
                 );
                 
                 if (!isRetryableError) {
-                    LogEngine.error(`Redis operation ${operationName} failed with non-retryable error: ${lastError.message}`);
+                    LogEngine.error(`Redis 8 operation ${operationName} failed with non-retryable error: ${lastError.message}`);
                     break;
                 }
                 
-                const delay = baseDelay * Math.pow(2, attempt - 1); // Exponential backoff
-                LogEngine.warn(`Redis operation ${operationName} failed (attempt ${attempt}/${maxRetries}), retrying in ${delay}ms: ${lastError.message}`);
+                // Faster exponential backoff for Redis 8
+                const delay = Math.min(baseDelay * Math.pow(1.5, attempt - 1), 2000); // Cap at 2s
+                LogEngine.warn(`Redis 8 operation ${operationName} failed (attempt ${attempt}/${maxRetries}), retrying in ${delay}ms: ${lastError.message}`);
                 
                 await new Promise(resolve => setTimeout(resolve, delay));
                 
@@ -120,7 +150,7 @@ export class RedisService {
                     try {
                         await this.connect();
                     } catch (reconnectError) {
-                        LogEngine.warn(`Failed to reconnect during retry: ${reconnectError}`);
+                        LogEngine.warn(`Redis 8 reconnection failed during retry: ${reconnectError}`);
                     }
                 }
             }
@@ -130,32 +160,55 @@ export class RedisService {
     }
 
     /**
-     * Check if webhook event already exists (duplicate detection)
+     * Redis 8-alpine optimized duplicate detection
      * @param eventId - Unique event identifier
      * @returns Promise<boolean> - true if event exists
      */
     async eventExists(eventId: string): Promise<boolean> {
         const key = `${redisEventConfig.keyPrefix}${eventId}`;
-        const exists = await this.executeWithRetry(
-            () => this.client.exists(key),
-            `exists check for ${eventId}`,
-            2 // fewer retries for existence checks
-        );
-        return exists === 1;
+        
+        try {
+            // Redis 8 optimization: Use GET instead of EXISTS for better performance
+            // If key exists, it will return 'processed', if not, it returns null
+            const result = await this.executeWithRetry(
+                () => this.client.get(key),
+                `get check for ${eventId}`,
+                2, // Fewer retries for duplicate checks
+                300, // Faster retry (300ms)
+                3000 // Shorter timeout (3s) for GET operations
+            );
+            
+            return result !== null;
+        } catch (error) {
+            // Fallback to EXISTS if GET fails
+            LogEngine.warn(`GET operation failed for ${eventId}, falling back to EXISTS: ${error}`);
+            
+            const exists = await this.executeWithRetry(
+                () => this.client.exists(key),
+                `exists fallback for ${eventId}`,
+                1, // Single retry for fallback
+                500,
+                2000 // Even shorter timeout for fallback
+            );
+            return exists === 1;
+        }
     }
 
     /**
-     * Mark webhook event as processed with automatic expiration
+     * Redis 8-alpine optimized event marking with shorter TTL
      * @param eventId - Unique event identifier  
-     * @param ttlSeconds - Time to live in seconds (default: 3 days from config)
+     * @param ttlSeconds - Time to live in seconds (default: 1 day for Redis 8 efficiency)
      */
     async markEventProcessed(eventId: string, ttlSeconds?: number): Promise<void> {
         const key = `${redisEventConfig.keyPrefix}${eventId}`;
-        const ttl = ttlSeconds || redisEventConfig.eventTtl; // 3 days default
+        const ttl = ttlSeconds || redisEventConfig.eventTtl; // 1 day default for Redis 8
+        
         await this.executeWithRetry(
             () => this.client.setEx(key, ttl, 'processed'),
             `setEx for ${eventId}`,
-            2 // fewer retries for marking processed
+            2, // Fewer retries for marking processed
+            300, // Faster retry
+            3000 // Shorter timeout for SET operations
         );
     }
 

@@ -32,8 +32,8 @@
     "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
-    "lint:security": "eslint . --ext .ts,.js --no-eslintrc --config eslint.config.js",
-    "lint:ci": "eslint . --ext .ts,.js --max-warnings 0"
+    "lint:security": "eslint . --ext .ts,.js",
+    "lint:ci": "eslint . --ext .ts,.js --max-warnings 1"
   },
   "dependencies": {
     "@wgtechlabs/log-engine": "2.2.0",

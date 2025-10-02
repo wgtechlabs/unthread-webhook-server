@@ -2,7 +2,7 @@
  * Type definitions for Unthread webhook server
  */
 
-import { Request, Response } from 'express';
+import { Request } from 'express';
 
 // Unthread webhook event types
 export type UnthreadEventType = 
@@ -18,6 +18,7 @@ export interface UnthreadWebhookEvent {
   eventId: string;
   eventTimestamp: number;
   webhookTimestamp: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: Record<string, any>;
 }
 
@@ -35,6 +36,7 @@ export interface ConversationEvent extends UnthreadWebhookEvent {
     userId?: string;
     createdAt?: number;
     updatedAt?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
 }
@@ -48,6 +50,7 @@ export interface MessageEvent extends UnthreadWebhookEvent {
     content?: string;
     userId?: string;
     createdAt?: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
 }
@@ -60,6 +63,7 @@ export type PlatformSource = string;
 export type WebhookEvent = UrlVerificationEvent | ConversationEvent | MessageEvent;
 
 // Extended Express Request with webhook-specific properties
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface WebhookRequest extends Request<any, any, UnthreadWebhookEvent> {
   rawBody: string;
 }
@@ -92,6 +96,7 @@ export interface RedisQueueMessage {
     eventId: string;
     eventTimestamp: number;
     webhookTimestamp: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
   };
   timestamp: number;
@@ -124,6 +129,7 @@ export interface WebhookResponse {
 // Error response interface
 export interface ErrorResponse {
   error: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any;
   responseTime?: string;
   timestamp?: string;

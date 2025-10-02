@@ -29,7 +29,11 @@
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "lint:security": "eslint . --ext .ts,.js --no-eslintrc --config eslint.config.js",
+    "lint:ci": "eslint . --ext .ts,.js --max-warnings 0"
   },
   "dependencies": {
     "@wgtechlabs/log-engine": "2.2.0",
@@ -41,9 +45,18 @@
     "redis": "^4.7.0"
   },
   "devDependencies": {
+    "@eslint/js": "9.36.0",
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.26",
+    "@typescript-eslint/eslint-plugin": "8.45.0",
+    "@typescript-eslint/parser": "8.45.0",
     "axios": "^1.12.0",
+    "eslint": "9.36.0",
+    "eslint-plugin-import": "2.32.0",
+    "eslint-plugin-n": "17.23.1",
+    "eslint-plugin-no-secrets": "2.2.1",
+    "eslint-plugin-promise": "7.2.1",
+    "eslint-plugin-security": "3.0.1",
     "nodemon": "^3.1.10",
     "only-allow": "1.2.1",
     "ts-node": "^10.9.2",

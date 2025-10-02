@@ -1,6 +1,6 @@
 import { body, validationResult, ValidationChain } from 'express-validator';
 import { Request, Response, NextFunction } from 'express';
-import { ErrorResponse, WebhookRequest } from '../types';
+import { ErrorResponse } from '../types';
 
 const validationRules: ValidationChain[] = [
     body('event')

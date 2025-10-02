@@ -95,22 +95,24 @@ export class WebhookController {
      */
     private queueEventForBackgroundProcessing(event: UnthreadWebhookEvent, requestId: string): void {
         // Use setImmediate to ensure this runs after response is sent
-        setImmediate(async () => {
-            try {
-                if (WebhookController.backgroundProcessor) {
-                    await WebhookController.backgroundProcessor.processEventInBackground(event, requestId);
-                } else {
-                    // Safe fallback: process with current instance instead of dropping
-                    LogEngine.warn('Background processor not initialized, processing with current instance');
-                    await this.processEventInBackground(event, requestId);
-                }
-            } catch (error) {
-                LogEngine.error(`💥 Background processing failed:`, {
-                    requestId,
-                    eventId: event?.eventId,
+        setImmediate(() => {
+            void (async () => {
+                try {
+                    if (WebhookController.backgroundProcessor) {
+                        await WebhookController.backgroundProcessor.processEventInBackground(event, requestId);
+                    } else {
+                        // Safe fallback: process with current instance instead of dropping
+                        LogEngine.warn('Background processor not initialized, processing with current instance');
+                        await this.processEventInBackground(event, requestId);
+                    }
+                } catch (error) {
+                    LogEngine.error(`💥 Background processing failed:`, {
+                        requestId,
+                        eventId: event?.eventId,
                     error: error instanceof Error ? error.message : 'Unknown error'
                 });
             }
+            })();
         });
     }
 

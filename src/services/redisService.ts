@@ -22,7 +22,7 @@ export class RedisService {
             
             // Set a timeout for the connection attempt
             const connectPromise = this.client.connect();
-            const timeoutPromise = new Promise((_, reject) => {
+            const timeoutPromise = new Promise((_resolve, reject) => {
                 setTimeout(() => reject(new Error('Redis connection timeout after 10 seconds')), 10000);
             });
             

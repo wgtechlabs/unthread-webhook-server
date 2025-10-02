@@ -20,6 +20,7 @@ export class WebhookService {
         this.fileAttachmentCorrelation = new FileAttachmentCorrelationUtil();
         
         // Set up callback for processing buffered file events
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.fileAttachmentCorrelation.onBufferedEventReady = async (event, sourcePlatform) => {
             try {
                 await this.continueEventProcessing(event, sourcePlatform);
@@ -230,6 +231,7 @@ export class WebhookService {
         
         // Check if all required fields are present
         for (const field of requiredFields) {
+            // eslint-disable-next-line security/detect-object-injection
             if (!event[field]) {
                 const error = `Missing required field: ${field}`;
                 LogEngine.error(error);

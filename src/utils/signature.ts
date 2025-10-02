@@ -90,7 +90,7 @@ export const verifySignature = (payload: string, signature: string, secret: stri
             Buffer.from(signature),
             Buffer.from(expectedSignature)
         );
-    } catch (error) {
+    } catch {
         return false;
     }
 };

@@ -1,10 +1,11 @@
 {
   "recommendations": [
+    "vitest.explorer",
     "bierner.markdown-preview-github-styles", 
     "bierner.github-markdown-preview",
     "bierner.markdown-shiki",
     "bierner.color-info",
     "oderwat.indent-rainbow",
-    "warengonzaga.bini-theme",
+    "warengonzaga.bini-theme"
   ]
 }

@@ -51,10 +51,9 @@ services:
   # =============================================================================
   # Main Node.js application that handles webhook processing and Redis queuing
   server:
+    image: unthread-webhook-server:latest  # Explicit image name for consistency
     build:
       context: .
-      tags:
-        - unthread-webhook-server:latest  # Explicit image name for consistency
     container_name: unthread-webhook-server-server-1
     ports:
       - "3000:3000"

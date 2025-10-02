@@ -2,20 +2,12 @@
 # DEV CONTAINER DOCKER COMPOSE OVERRIDE
 # =============================================================================
 # This file is used by the dev container to override the default docker-compose
-# configuration. It mounts the workspace and keeps the container running.
+# configuration. It keeps the container running and sets the correct environment.
+# The dev container features will be applied automatically to this service.
 # =============================================================================
-
-version: '3.8'
 
 services:
   server:
-    # Override the build to use the dev container features
-    build:
-      context: .
-      dockerfile: Dockerfile
-    # Mount the workspace for live development
-    volumes:
-      - .:/workspaces/unthread-webhook-server:cached
     # Keep container running for dev container
     command: sleep infinity
     # Override environment for dev container

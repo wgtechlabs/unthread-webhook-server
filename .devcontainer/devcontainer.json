@@ -50,7 +50,7 @@
     }
   },
   
-  "postCreateCommand": "npm install -g pnpm && pnpm install && (gh extension install github/gh-copilot || true) && (npm install -g @github/copilot || true) && (grep -qxF 'alias ghcs=\"gh copilot suggest\"' ~/.zshrc || echo 'alias ghcs=\"gh copilot suggest\"' >> ~/.zshrc) && (grep -qxF 'alias ghce=\"gh copilot explain\"' ~/.zshrc || echo 'alias ghce=\"gh copilot explain\"' >> ~/.zshrc)",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   
   "forwardPorts": [3000, 6379],
   "portsAttributes": {

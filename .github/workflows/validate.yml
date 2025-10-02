@@ -25,6 +25,13 @@ jobs:
       - name: Type checking
         run: yarn type-check
         
+      - name: Run tests
+        run: yarn test
+        
+      - name: Generate coverage
+        run: yarn test:coverage
+        continue-on-error: true
+        
       - name: Build TypeScript
         run: yarn build
         

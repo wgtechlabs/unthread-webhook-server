@@ -1,6 +1,6 @@
 {
   "name": "unthread-webhook-server",
-  "version": "1.0.0-beta.7",
+  "version": "1.0.0-beta.7-patch.1",
   "description": "A reliable, production-ready Node.js server for processing Unthread.io webhooks with signature verification and smart platform handling.",
   "license": "GPL-3.0",
   "private": true,

@@ -69,6 +69,12 @@ yarn build
 # Type checking only
 yarn type-check
 
+# Linting
+yarn lint              # Run ESLint on all source files
+yarn lint:fix          # Run ESLint with auto-fix
+yarn lint:security     # Focus on security-related issues
+yarn lint:ci           # CI-friendly linting (fails on warnings)
+
 # Clean build artifacts
 yarn clean
 
@@ -101,6 +107,7 @@ src/
 #### 🎯 Development Guidelines
 
 - **TypeScript First**: All code must be written in TypeScript with strict type checking
+- **Code Quality**: Follow ESLint rules and security best practices enforced by automated linting
 - **Structured Logging**: Use `@wgtechlabs/log-engine` for all logging with built-in PII protection and security features
 - **Error Handling**: Implement comprehensive error handling with detailed logging
 - **Package Manager**: Use Yarn exclusively (enforced via preinstall script)
@@ -108,6 +115,50 @@ src/
 - **Environment**: Use Node.js 20+ for development
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
 - **Webhook Integration**: Ensure compatibility with [`wgtechlabs/unthread-telegram-bot`](https://github.com/wgtechlabs/unthread-telegram-bot)
+
+#### 🔍 Code Quality and Linting
+
+This project uses **ESLint** with comprehensive security plugins to maintain code quality and prevent common security vulnerabilities.
+
+**Security Plugins Enabled:**
+
+- **eslint-plugin-security** - Detects common security vulnerabilities
+- **eslint-plugin-no-secrets** - Prevents hardcoded secrets and credentials
+- **eslint-plugin-n** - Node.js best practices and deprecated API detection
+- **eslint-plugin-import** - Validates ES6 import/export syntax
+- **eslint-plugin-promise** - Ensures proper promise handling
+
+**Running Linting:**
+
+```bash
+# Check for issues
+yarn lint
+
+# Automatically fix issues
+yarn lint:fix
+
+# Security-focused check
+yarn lint:security
+
+# CI mode (fails on warnings)
+yarn lint:ci
+```
+
+**Key Security Rules:**
+
+- **No hardcoded secrets** - Detects API keys, tokens, passwords in code
+- **Safe regular expressions** - Prevents ReDoS attacks
+- **Secure random generation** - Enforces crypto.randomBytes over Math.random
+- **Object injection protection** - Warns about unsafe object property access
+- **Child process security** - Flags potentially unsafe child process usage
+- **Promise handling** - Ensures all promises are properly handled
+
+**Best Practices:**
+
+- Fix all linting errors before submitting PRs
+- Address security warnings unless there's a documented reason to ignore them
+- Use ESLint disable comments sparingly and only with justification
+- VSCode users get automatic linting and auto-fix on save
 
 #### 🧪 Testing Guidelines
 
@@ -124,6 +175,7 @@ While this project doesn't currently have a test suite, when contributing:
 1. **Pre-submission checks**:
    - [ ] Code builds without errors (`yarn build`)
    - [ ] TypeScript type checking passes (`yarn type-check`)
+   - [ ] Linting passes without errors (`yarn lint`)
    - [ ] Development server starts successfully (`yarn dev`)
    - [ ] Redis integration works properly
    - [ ] Error handling is comprehensive
@@ -131,9 +183,10 @@ While this project doesn't currently have a test suite, when contributing:
 2. **Pull Request Requirements**:
    - [ ] Target the `dev` branch (PRs to `main` will be rejected)
    - [ ] Include clear description of changes
-   - [ ] Follow existing code patterns
+   - [ ] Follow existing code patterns and ESLint rules
    - [ ] Update documentation if needed
    - [ ] Test webhook functionality manually
+   - [ ] All linting issues resolved or properly justified
 
 ### 📖 Documentation
 

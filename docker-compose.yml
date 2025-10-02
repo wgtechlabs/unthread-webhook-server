@@ -4,21 +4,25 @@
 # Complete application stack for the Unthread Webhook Server
 #
 # Services:
-# ┌─ webhook-server     → Main webhook processing application  
-# └─ redis-webhook      → Redis for webhook message queuing
+# ┌─ server            → Main webhook processing application (builds from source)
+# └─ redis-webhook     → Redis 8-alpine for webhook message queuing
+#
+# Docker Container Naming:
+#   - server           → unthread-webhook-server-server-1
+#   - redis-webhook    → unthread-webhook-server-redis-webhook-1
 #
 # Usage:
 #   docker-compose up -d                    # Start all services
-#   docker-compose logs -f webhook-server   # View webhook server logs
+#   docker-compose logs -f server           # View webhook server logs
 #   docker-compose exec redis-webhook redis-cli
+#   docker-compose down                     # Stop all services
+#   docker-compose down -v                  # Stop and remove volumes
 #
 # Prerequisites: 
-#   - Copy .env.example to .env and configure your tokens
-#   - Ensure external network exists: docker network create unthread-integration-network
+#   - Copy .env.example to .env and configure your values
+#   - Ensure Docker and Docker Compose are installed
 #
 # =============================================================================
-
-version: '3.8'
 
 services:
   # =============================================================================
@@ -26,37 +30,38 @@ services:
   # =============================================================================
   # Dedicated Redis instance for webhook message queuing and communication
   redis-webhook:
-    image: redis:7-alpine
+    image: redis:8-alpine
+    container_name: unthread-webhook-server-redis-webhook-1
     ports:
       - "6379:6379"
     volumes:
       - redis_webhook_data:/data
+    command: redis-server --appendonly yes  # Enable data persistence
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
-      timeout: 3s
-      retries: 3
-      start_period: 30s
+      timeout: 5s
+      retries: 5
     networks:
       - unthread-integration-network
 
   # =============================================================================
   # WEBHOOK SERVER APPLICATION
   # =============================================================================
-  # Handles incoming webhooks from Unthread and processes them
-  webhook-server:
-    image: wgtechlabs/unthread-webhook-server:latest
-    container_name: docker-unthread-webhook-server
+  # Main Node.js application that handles webhook processing and Redis queuing
+  server:
+    image: unthread-webhook-server:latest  # Explicit image name for consistency
+    build:
+      context: .
+    container_name: unthread-webhook-server-server-1
     ports:
       - "3000:3000"
     env_file:
       - .env
-    environment:
-      - REDIS_URL=redis://redis-webhook:6379
     depends_on:
       redis-webhook:
-        condition: service_healthy
+        condition: service_healthy  # Wait for Redis to be ready
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -77,8 +82,8 @@ volumes:
 # =============================================================================
 # NETWORKING
 # =============================================================================
-# External network for communication between services
-# Create with: docker network create unthread-integration-network
+# Docker Compose will automatically create and manage this network
 networks:
   unthread-integration-network:
-    external: true
+    driver: bridge
+    name: unthread-integration-network  # Use explicit name for consistency

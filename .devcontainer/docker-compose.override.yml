@@ -1,0 +1,23 @@
+# =============================================================================
+# DEV CONTAINER DOCKER COMPOSE OVERRIDE
+# =============================================================================
+# This file is used by the dev container to override the default docker-compose
+# configuration. It mounts the workspace and keeps the container running.
+# =============================================================================
+
+version: '3.8'
+
+services:
+  server:
+    # Override the build to use the dev container features
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Mount the workspace for live development
+    volumes:
+      - .:/workspaces/unthread-webhook-server:cached
+    # Keep container running for dev container
+    command: sleep infinity
+    # Override environment for dev container
+    environment:
+      - REDIS_URL=redis://redis-webhook:6379

@@ -29,7 +29,11 @@
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@wgtechlabs/log-engine": "2.2.0",
@@ -43,11 +47,14 @@
   "devDependencies": {
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.26",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
     "axios": "^1.12.0",
     "nodemon": "^3.1.10",
     "only-allow": "1.2.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "3.2.4"
   },
   "packageManager": "yarn@1.22.22"
 }

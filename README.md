@@ -239,6 +239,42 @@ src/
     └── fileAttachmentCorrelation.ts  # File correlation system
 ```
 
+## 🧪 Testing
+
+This project uses [Vitest](https://vitest.dev/) for fast, modern testing with first-class TypeScript support.
+
+### Running Tests
+
+```bash
+# Run all tests (one-time)
+yarn test
+
+# Run tests in watch mode (development)
+yarn test:watch
+
+# Run tests with interactive UI
+yarn test:ui
+
+# Generate coverage report
+yarn test:coverage
+```
+
+### Writing Tests
+
+Tests are co-located with source files using the `.test.ts` suffix:
+```
+src/
+├── utils/
+│   ├── signature.ts
+│   └── signature.test.ts
+```
+
+### Coverage Requirements
+- Lines: 80%
+- Functions: 80%
+- Branches: 80%
+- Statements: 80%
+
 ## 🔍 Monitoring
 
 ### Health Check

@@ -32,7 +32,9 @@
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.js"
+    "**/*.js",
+    "**/*.test.ts",
+    "**/*.spec.ts"
   ],
   "ts-node": {
     "esm": false,

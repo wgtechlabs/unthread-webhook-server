@@ -74,6 +74,12 @@ yarn clean
 
 # Start production build
 yarn start
+
+# Run tests
+yarn test                # Run all tests once
+yarn test:watch          # Run tests in watch mode
+yarn test:ui             # Interactive test UI
+yarn test:coverage       # Generate coverage report
 ```
 
 #### 🏛️ Project Structure
@@ -111,9 +117,17 @@ src/
 
 #### 🧪 Testing Guidelines
 
-While this project doesn't currently have a test suite, when contributing:
+This project uses [Vitest](https://vitest.dev/) for automated testing. When contributing:
 
-- Test your changes manually using tools like ngrok for webhook testing
+**Automated Testing:**
+- Write tests for new features and bug fixes
+- Ensure all tests pass: `yarn test`
+- Maintain minimum 80% code coverage: `yarn test:coverage`
+- Follow co-located test patterns (e.g., `signature.ts` → `signature.test.ts`)
+- See [TESTING.md](./TESTING.md) for detailed testing documentation
+
+**Manual Testing:**
+- Test your changes using tools like ngrok for webhook testing
 - Verify Redis connectivity and queue operations
 - Test HMAC signature verification with valid Unthread events
 - Ensure proper error handling for edge cases
@@ -124,6 +138,8 @@ While this project doesn't currently have a test suite, when contributing:
 1. **Pre-submission checks**:
    - [ ] Code builds without errors (`yarn build`)
    - [ ] TypeScript type checking passes (`yarn type-check`)
+   - [ ] All tests pass (`yarn test`)
+   - [ ] Coverage requirements met (`yarn test:coverage`)
    - [ ] Development server starts successfully (`yarn dev`)
    - [ ] Redis integration works properly
    - [ ] Error handling is comprehensive
@@ -133,6 +149,7 @@ While this project doesn't currently have a test suite, when contributing:
    - [ ] Include clear description of changes
    - [ ] Follow existing code patterns
    - [ ] Update documentation if needed
+   - [ ] Add/update tests for changes
    - [ ] Test webhook functionality manually
 
 ### 📖 Documentation

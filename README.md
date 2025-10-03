@@ -20,11 +20,11 @@ These outstanding organizations partner with us to support our open-source work:
 
 ## 🚀 Quick Start
 
-**Requirements**: Node.js 20+, Redis, Yarn
+**Requirements**: Node.js 20+, Redis, pnpm
 
 ```bash
 # 1. Install dependencies
-yarn install
+pnpm install
 
 # 2. Configure environment
 cp .env.example .env
@@ -37,8 +37,8 @@ sudo systemctl start redis-server     # Linux
 docker run -d -p 6379:6379 redis:alpine  # Docker
 
 # 4. Run the server
-yarn dev        # Development with auto-reload
-yarn start      # Production mode
+pnpm dev        # Development with auto-reload
+pnpm start      # Production mode
 ```
 
 Server runs on `http://localhost:3000` with endpoints:
@@ -209,11 +209,11 @@ Events are queued with this enhanced structure:
 ### Build Commands
 
 ```bash
-yarn clean      # Clean previous builds
-yarn build      # Build for production
-yarn type-check # TypeScript type checking only
-yarn dev        # Development with hot-reload
-yarn start      # Run production build
+pnpm clean      # Clean previous builds
+pnpm build      # Build for production
+pnpm type-check # TypeScript type checking only
+pnpm dev        # Development with hot-reload
+pnpm start      # Run production build
 ```
 
 ### Project Structure

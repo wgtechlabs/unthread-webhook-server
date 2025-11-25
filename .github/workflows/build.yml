@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
       
       - name: Build and Push Container
-        uses: wgtechlabs/container-build-flow-action@v1.0.0
+        uses: wgtechlabs/container-build-flow-action@v1.0.1
         with:
           # Registry Configuration
           registry: both
@@ -51,7 +51,7 @@ jobs:
             org.opencontainers.image.licenses=GPL-3.0
           
           # Features
-          pr-comment-enabled: false
+          pr-comment-enabled: true
           cache-enabled: true
           provenance: true
           sbom: true

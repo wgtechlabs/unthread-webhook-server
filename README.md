@@ -105,6 +105,35 @@ docker-compose down
 - `.env.example` - Template with default values
 - `.env.railway` - Railway deployment template
 
+## 🏗️ Development Container
+
+This project includes a pre-configured development container with all necessary tools for an optimal development experience.
+
+### Quick Start
+1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+2. Install [VS Code](https://code.visualstudio.com/) with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+3. Open project in VS Code
+4. Click "Reopen in Container" when prompted (or use Command Palette: "Dev Containers: Reopen in Container")
+
+### Included Tools
+- **Node.js 22.16 LTS** - Matching production environment
+- **pnpm** - Primary package manager (latest stable)
+- **GitHub Copilot CLI** - Both gh extension and npm package
+  - Use `ghcs` for command suggestions
+  - Use `ghce` for command explanations
+- **TypeScript, ts-node, nodemon** - Development tools
+- **Redis CLI** - For debugging Redis operations
+- **Zsh + Oh My Zsh** - Enhanced shell experience
+- **All essential VS Code extensions** - Copilot, ESLint, Docker, GitLens, and more
+
+### Benefits
+- **Consistency**: Identical environment for all developers
+- **Speed**: Pre-configured tools, start coding immediately
+- **AI-Powered**: GitHub Copilot CLI ready out of the box
+- **Isolated**: No conflicts with host machine setup
+
+For detailed documentation, see [`.devcontainer/README.md`](.devcontainer/README.md).
+
 ## ⚙️ Configuration
 
 ### Environment Variables

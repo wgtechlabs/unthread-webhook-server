@@ -51,7 +51,7 @@ jobs:
             org.opencontainers.image.licenses=GPL-3.0
           
           # Features
-          pr-comment-enabled: true
+          pr-comment-enabled: false
           cache-enabled: true
           provenance: true
           sbom: true

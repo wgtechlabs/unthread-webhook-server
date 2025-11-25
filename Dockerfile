@@ -35,8 +35,9 @@ RUN apk update && apk upgrade && \
     rm -rf /var/cache/apk/*
 
 # Enable and install pnpm via corepack
+# Note: Version must match packageManager field in package.json (currently 9.15.4)
 RUN corepack enable && \
-    corepack prepare pnpm@latest --activate
+    corepack prepare pnpm@9.15.4 --activate
 
 # Set working directory for all subsequent stages
 WORKDIR /usr/src/app

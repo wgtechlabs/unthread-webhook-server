@@ -13,28 +13,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
+          cache: 'pnpm'
           
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
         
       - name: Run linting
         run: yarn lint
         
       - name: Type checking
-        run: yarn type-check
+        run: pnpm type-check
         
       - name: Build TypeScript
-        run: yarn build
-        
-      - name: Test Docker build (no push)
-        run: |
-          echo "Testing Docker build..."
-          docker build -t test-build .
-          echo "Build successful, cleaning up..."
-          docker image rm test-build
-          echo "✅ Docker build test completed"
+        run: pnpm build

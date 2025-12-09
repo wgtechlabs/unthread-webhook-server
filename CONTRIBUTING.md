@@ -26,9 +26,9 @@ To get started with development:
 
 2. **Install dependencies**
    ```bash
-   yarn install
+   pnpm install
    ```
-   > ⚠️ **Important**: This project enforces the use of Yarn. npm install will be blocked automatically.
+   > ⚠️ **Important**: This project enforces the use of pnpm. npm and yarn install will be blocked automatically.
 
 3. **Set up environment variables**
    - Copy `.env.example` to `.env`
@@ -52,7 +52,7 @@ To get started with development:
 
 5. **Start the project in development mode**
    ```bash
-   yarn dev
+   pnpm dev
    ```
 
 Please refer to the [README](./README.md) for more detailed setup instructions.
@@ -61,12 +61,13 @@ Please refer to the [README](./README.md) for more detailed setup instructions.
 
 ```bash
 # Development with auto-reload
-yarn dev
+pnpm dev
 
 # Build for production
-yarn build
+pnpm build
 
 # Type checking only
+pnpm type-check
 yarn type-check
 
 # Linting
@@ -76,10 +77,10 @@ yarn lint:security     # Focus on security-related issues
 yarn lint:ci           # CI-friendly linting (fails on warnings)
 
 # Clean build artifacts
-yarn clean
+pnpm clean
 
 # Start production build
-yarn start
+pnpm start
 ```
 
 #### 🏛️ Project Structure
@@ -110,7 +111,7 @@ src/
 - **Code Quality**: Follow ESLint rules and security best practices enforced by automated linting
 - **Structured Logging**: Use `@wgtechlabs/log-engine` for all logging with built-in PII protection and security features
 - **Error Handling**: Implement comprehensive error handling with detailed logging
-- **Package Manager**: Use Yarn exclusively (enforced via preinstall script)
+- **Package Manager**: Use pnpm exclusively (enforced via preinstall script)
 - **Code Style**: Follow existing patterns and maintain consistency
 - **Environment**: Use Node.js 20+ for development
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
@@ -173,6 +174,9 @@ While this project doesn't currently have a test suite, when contributing:
 #### 🔍 Code Review Process
 
 1. **Pre-submission checks**:
+   - [ ] Code builds without errors (`pnpm build`)
+   - [ ] TypeScript type checking passes (`pnpm type-check`)
+   - [ ] Development server starts successfully (`pnpm dev`)
    - [ ] Code builds without errors (`yarn build`)
    - [ ] TypeScript type checking passes (`yarn type-check`)
    - [ ] Linting passes without errors (`yarn lint`)

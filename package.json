@@ -21,10 +21,10 @@
   "main": "dist/app.js",
   "engines": {
     "node": ">=20.0.0",
-    "yarn": ">=1.22.0"
+    "pnpm": "9.15.4"
   },
   "scripts": {
-    "preinstall": "npx only-allow yarn",
+    "preinstall": "npx only-allow pnpm",
     "build": "tsc",
     "start": "node dist/app.js",
     "dev": "nodemon --exec ts-node src/app.ts",
@@ -62,5 +62,5 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "pnpm@9.15.4"
 }

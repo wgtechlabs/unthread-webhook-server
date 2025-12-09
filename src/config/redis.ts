@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import type { RedisClientType } from 'redis';
 import { LogEngine } from '@wgtechlabs/log-engine';
 
 // Simple Redis configuration
@@ -38,7 +39,7 @@ export const redisEventConfig = {
 };
 
 // Create Redis client for v4.x - use URL string directly with timeout
-const client = createClient({ 
+const client: RedisClientType = createClient({ 
     url: redisConfig.url,
     socket: {
         connectTimeout: 5000 // 5 second timeout

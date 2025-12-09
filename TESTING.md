@@ -17,24 +17,24 @@ We use [Vitest](https://vitest.dev/) as our testing framework for its:
 
 ```bash
 # Run all tests once (CI/CD friendly)
-yarn test
+pnpm test
 
 # Run tests in watch mode (development)
-yarn test:watch
+pnpm test:watch
 
 # Run tests with interactive UI
-yarn test:ui
+pnpm test:ui
 
 # Generate coverage report
-yarn test:coverage
+pnpm test:coverage
 ```
 
 ### Test Commands Explained
 
-- **`yarn test`**: Runs all tests once and exits. Perfect for CI/CD pipelines and pre-commit checks.
-- **`yarn test:watch`**: Runs tests in watch mode. Tests automatically re-run when files change. Ideal for development.
-- **`yarn test:ui`**: Opens an interactive browser-based UI for debugging and exploring tests.
-- **`yarn test:coverage`**: Generates detailed coverage reports in multiple formats (text, JSON, HTML, LCOV).
+- **`pnpm test`**: Runs all tests once and exits. Perfect for CI/CD pipelines and pre-commit checks.
+- **`pnpm test:watch`**: Runs tests in watch mode. Tests automatically re-run when files change. Ideal for development.
+- **`pnpm test:ui`**: Opens an interactive browser-based UI for debugging and exploring tests.
+- **`pnpm test:coverage`**: Generates detailed coverage reports in multiple formats (text, JSON, HTML, LCOV).
 
 ## 📁 Test Organization
 
@@ -162,11 +162,11 @@ We maintain high code coverage standards:
 
 ### Viewing Coverage Reports
 
-After running `yarn test:coverage`, open the HTML report:
+After running `pnpm test:coverage`, open the HTML report:
 
 ```bash
 # Generate coverage
-yarn test:coverage
+pnpm test:coverage
 
 # Open HTML report in browser
 open coverage/index.html  # macOS
@@ -321,7 +321,7 @@ Configuration in `.vscode/settings.json`:
 ```json
 {
   "vitest.enable": true,
-  "vitest.commandLine": "yarn test:watch"
+  "vitest.commandLine": "pnpm test:watch"
 }
 ```
 
@@ -337,10 +337,10 @@ When contributing to the project:
 
 ### Pre-commit Checklist
 
-- [ ] All tests pass: `yarn test`
-- [ ] Coverage meets requirements: `yarn test:coverage`
-- [ ] TypeScript compiles: `yarn type-check`
-- [ ] Build succeeds: `yarn build`
+- [ ] All tests pass: `pnpm test`
+- [ ] Coverage meets requirements: `pnpm test:coverage`
+- [ ] TypeScript compiles: `pnpm type-check`
+- [ ] Build succeeds: `pnpm build`
 
 ## 📚 Resources
 
@@ -369,12 +369,12 @@ When contributing to the project:
 
 3. **Use the interactive UI:**
    ```bash
-   yarn test:ui
+   pnpm test:ui
    ```
 
 ### Faster Test Runs
 
-- Use `yarn test:watch` - only changed files are retested
+- Use `pnpm test:watch` - only changed files are retested
 - Use `.only` during development to focus on specific tests
 - Leverage Vitest's parallel execution (automatic)
 

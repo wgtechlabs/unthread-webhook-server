@@ -275,16 +275,16 @@ This project uses [Vitest](https://vitest.dev/) for fast, modern testing with fi
 
 ```bash
 # Run all tests (one-time)
-yarn test
+pnpm test
 
 # Run tests in watch mode (development)
-yarn test:watch
+pnpm test:watch
 
 # Run tests with interactive UI
-yarn test:ui
+pnpm test:ui
 
 # Generate coverage report
-yarn test:coverage
+pnpm test:coverage
 ```
 
 ### Writing Tests

@@ -1,66 +1,26 @@
 {
   "name": "Unthread Webhook Server",
-  "dockerComposeFile": [
-    "../docker-compose.yml",
-    "docker-compose.override.yml"
-  ],
+  "dockerComposeFile": "../docker-compose.yml",
   "service": "server",
   "workspaceFolder": "/workspaces/unthread-webhook-server",
-  
-  "features": {
-    "ghcr.io/devcontainers/features/node:1": {
-      "version": "22.16",
-      "nodeGypDependencies": true,
-      "installYarnUsingApt": false
-    },
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "configureZshAsDefaultShell": true,
-      "installOhMyZsh": true
-    }
-  },
   
   "customizations": {
     "vscode": {
       "extensions": [
         "github.copilot",
         "github.copilot-chat",
-        "github.vscode-pull-request-github",
         "dbaeumer.vscode-eslint",
         "ms-azuretools.vscode-docker",
-        "eamodio.gitlens",
-        "usernamehw.errorlens",
-        "aaron-bond.better-comments",
-        "esbenp.prettier-vscode",
-        "editorconfig.editorconfig",
-        "christian-kohler.npm-intellisense",
-        "christian-kohler.path-intellisense"
+        "eamodio.gitlens"
       ],
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "zsh",
         "editor.formatOnSave": true,
-        "editor.codeActionsOnSave": {
-          "source.fixAll.eslint": true
-        },
         "typescript.tsdk": "node_modules/typescript/lib"
       }
     }
   },
   
-  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postCreateCommand": "pnpm install",
   
-  "forwardPorts": [3000, 6379],
-  "portsAttributes": {
-    "3000": {
-      "label": "Webhook Server",
-      "onAutoForward": "notify"
-    },
-    "6379": {
-      "label": "Redis",
-      "onAutoForward": "silent"
-    }
-  }
+  "forwardPorts": [3000, 6379]
 }

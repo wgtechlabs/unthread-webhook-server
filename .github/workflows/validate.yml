@@ -17,23 +17,23 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'yarn'
+          cache: 'pnpm'
           
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
         
       - name: Type checking
-        run: yarn type-check
+        run: pnpm type-check
         
       - name: Run tests
-        run: yarn test
+        run: pnpm test
         
       - name: Generate coverage
-        run: yarn test:coverage
+        run: pnpm test:coverage
         continue-on-error: true
         
       - name: Build TypeScript
-        run: yarn build
+        run: pnpm build
         
       - name: Test Docker build (no push)
         run: |

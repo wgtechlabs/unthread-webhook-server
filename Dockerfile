@@ -34,6 +34,11 @@ RUN apk update && apk upgrade && \
     apk add --no-cache dumb-init && \
     rm -rf /var/cache/apk/*
 
+# Enable and install pnpm via corepack
+# Note: Version must match packageManager field in package.json (currently 9.15.4)
+RUN corepack enable && \
+    corepack prepare pnpm@9.15.4 --activate
+
 # Set working directory for all subsequent stages
 WORKDIR /usr/src/app
 
@@ -46,9 +51,10 @@ FROM base AS deps
 # Use bind mounts and cache for faster builds
 # Downloads dependencies without copying package files into the layer
 RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=yarn.lock,target=yarn.lock \
-    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-yarn-cache,target=/root/.yarn \
-    yarn install --production --frozen-lockfile
+    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+    --mount=type=bind,source=.npmrc,target=.npmrc \
+    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --prod --frozen-lockfile
 
 # =============================================================================
 # STAGE 3: Build Application  
@@ -58,13 +64,14 @@ FROM deps AS build
 
 # Install all dependencies (including devDependencies for building)
 RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=yarn.lock,target=yarn.lock \
-    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-yarn-cache,target=/root/.yarn \
-    yarn install --frozen-lockfile
+    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
+    --mount=type=bind,source=.npmrc,target=.npmrc \
+    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # Copy source code and build the application
 COPY . .
-RUN yarn run build
+RUN pnpm run build
 
 # =============================================================================
 # STAGE 4: Final Runtime Image

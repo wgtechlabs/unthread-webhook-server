@@ -13,10 +13,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.4
+          
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'pnpm'
           cache: 'pnpm'
           
       - name: Install dependencies
@@ -24,11 +30,14 @@ jobs:
         
       - name: Type checking
         run: pnpm type-check
+        run: pnpm type-check
         
       - name: Run tests
         run: pnpm test
+        run: pnpm test
         
       - name: Generate coverage
+        run: pnpm test:coverage
         run: pnpm test:coverage
         continue-on-error: true
         

@@ -1,0 +1,15 @@
+# =============================================================================
+# DEV CONTAINER DOCKER COMPOSE OVERRIDE
+# =============================================================================
+# This file is used by the dev container to override the default docker-compose
+# configuration. It keeps the container running and sets the correct environment.
+# The dev container features will be applied automatically to this service.
+# =============================================================================
+
+services:
+  server:
+    # Keep container running for dev container
+    command: sleep infinity
+    # Override environment for dev container
+    environment:
+      - REDIS_URL=redis://redis-webhook:6379

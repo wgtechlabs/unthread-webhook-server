@@ -56,7 +56,7 @@ app.get('/health', async (req: Request, res: Response) => {
                 timestamp: new Date().toISOString() 
             });
         }
-    } catch (error) {
+    } catch {
         res.status(503).json({ 
             status: 'ERROR', 
             redis: 'error',
@@ -70,7 +70,7 @@ app.post('/unthread-webhook',
     verifySignature, 
     ...validateEvent, 
     (req: Request, res: Response) => {
-        webhookController.handleWebhook(req as WebhookRequest, res);
+        void webhookController.handleWebhook(req as WebhookRequest, res);
     }
 );
 
@@ -98,4 +98,4 @@ async function startServer() {
     }
 }
 
-startServer();
+void startServer();

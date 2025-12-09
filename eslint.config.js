@@ -20,6 +20,9 @@ module.exports = [
       'tmp/**',
       'temp/**',
       'eslint.config.js', // Exclude config file itself
+      '**/*.test.ts',     // Test files (not in tsconfig project)
+      '**/*.spec.ts',     // Spec files (not in tsconfig project)
+      'vitest.config.ts', // Vitest config (not in tsconfig project)
     ],
   },
   

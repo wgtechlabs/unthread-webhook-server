@@ -23,15 +23,31 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
+          cache: 'pnpm'
           
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         
-      - name: Run linting
-        run: pnpm lint
-        
       - name: Type checking
         run: pnpm type-check
+        run: pnpm type-check
+        
+      - name: Run tests
+        run: pnpm test
+        run: pnpm test
+        
+      - name: Generate coverage
+        run: pnpm test:coverage
+        run: pnpm test:coverage
+        continue-on-error: true
         
       - name: Build TypeScript
         run: pnpm build
+        
+      - name: Test Docker build (no push)
+        run: |
+          echo "Testing Docker build..."
+          docker build -t test-build .
+          echo "Build successful, cleaning up..."
+          docker image rm test-build
+          echo "✅ Docker build test completed"

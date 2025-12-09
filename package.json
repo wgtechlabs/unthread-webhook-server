@@ -33,7 +33,11 @@
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
     "lint:security": "eslint . --ext .ts,.js",
-    "lint:ci": "eslint . --ext .ts,.js --max-warnings 1"
+    "lint:ci": "eslint . --ext .ts,.js --max-warnings 1",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@wgtechlabs/log-engine": "2.2.0",
@@ -50,6 +54,8 @@
     "@types/node": "^22.15.26",
     "@typescript-eslint/eslint-plugin": "8.45.0",
     "@typescript-eslint/parser": "8.45.0",
+    "@vitest/coverage-v8": "3.2.4",
+    "@vitest/ui": "3.2.4",
     "axios": "^1.12.0",
     "eslint": "9.36.0",
     "eslint-plugin-import": "2.32.0",
@@ -60,7 +66,8 @@
     "nodemon": "^3.1.10",
     "only-allow": "1.2.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "3.2.4"
   },
   "packageManager": "pnpm@9.15.4"
 }

@@ -80,6 +80,12 @@ pnpm clean
 
 # Start production build
 pnpm start
+
+# Run tests
+pnpm test                # Run all tests once
+pnpm test:watch          # Run tests in watch mode
+pnpm test:ui             # Interactive test UI
+pnpm test:coverage       # Generate coverage report
 ```
 
 #### 🏛️ Project Structure
@@ -187,9 +193,17 @@ const data: any = response;
 
 #### 🧪 Testing Guidelines
 
-While this project doesn't currently have a test suite, when contributing:
+This project uses [Vitest](https://vitest.dev/) for automated testing. When contributing:
 
-- Test your changes manually using tools like ngrok for webhook testing
+**Automated Testing:**
+- Write tests for new features and bug fixes
+- Ensure all tests pass: `yarn test`
+- Maintain minimum 80% code coverage: `yarn test:coverage`
+- Follow co-located test patterns (e.g., `signature.ts` → `signature.test.ts`)
+- See [TESTING.md](./TESTING.md) for detailed testing documentation
+
+**Manual Testing:**
+- Test your changes using tools like ngrok for webhook testing
 - Verify Redis connectivity and queue operations
 - Test HMAC signature verification with valid Unthread events
 - Ensure proper error handling for edge cases
@@ -201,6 +215,8 @@ While this project doesn't currently have a test suite, when contributing:
    - [ ] Code builds without errors (`pnpm build`)
    - [ ] TypeScript type checking passes (`pnpm type-check`)
    - [ ] Linting passes without errors (`pnpm lint`)
+   - [ ] All tests pass (`pnpm test`)
+   - [ ] Coverage requirements met (`pnpm test:coverage`)
    - [ ] Development server starts successfully (`pnpm dev`)
    - [ ] Redis integration works properly
    - [ ] Error handling is comprehensive
@@ -211,6 +227,7 @@ While this project doesn't currently have a test suite, when contributing:
    - [ ] Include clear description of changes
    - [ ] Follow existing code patterns and ESLint rules
    - [ ] Update documentation if needed
+   - [ ] Add/update tests for changes
    - [ ] Test webhook functionality manually
    - [ ] All linting issues resolved or properly justified
 

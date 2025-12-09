@@ -23,21 +23,17 @@ jobs:
         with:
           node-version: '20'
           cache: 'pnpm'
-          cache: 'pnpm'
           
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
         
       - name: Type checking
         run: pnpm type-check
-        run: pnpm type-check
         
       - name: Run tests
         run: pnpm test
-        run: pnpm test
         
       - name: Generate coverage
-        run: pnpm test:coverage
         run: pnpm test:coverage
         continue-on-error: true
         

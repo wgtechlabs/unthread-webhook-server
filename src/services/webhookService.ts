@@ -20,7 +20,6 @@ export class WebhookService {
         this.fileAttachmentCorrelation = new FileAttachmentCorrelationUtil();
         
         // Set up callback for processing buffered file events
-        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         this.fileAttachmentCorrelation.onBufferedEventReady = async (event, sourcePlatform) => {
             try {
                 await this.continueEventProcessing(event, sourcePlatform);

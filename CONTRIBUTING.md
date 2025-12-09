@@ -197,8 +197,8 @@ This project uses [Vitest](https://vitest.dev/) for automated testing. When cont
 
 **Automated Testing:**
 - Write tests for new features and bug fixes
-- Ensure all tests pass: `yarn test`
-- Maintain minimum 80% code coverage: `yarn test:coverage`
+- Ensure all tests pass: `pnpm test`
+- Maintain minimum 80% code coverage: `pnpm test:coverage`
 - Follow co-located test patterns (e.g., `signature.ts` → `signature.test.ts`)
 - See [TESTING.md](./TESTING.md) for detailed testing documentation
 

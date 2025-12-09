@@ -424,7 +424,7 @@ export class FileAttachmentCorrelationUtil {
    * Callback for when buffered event is ready to process
    * This will be set by WebhookService
    */
-  onBufferedEventReady?: (event: UnthreadWebhookEvent, sourcePlatform: string) => void;
+  onBufferedEventReady?: (event: UnthreadWebhookEvent, sourcePlatform: string) => void | Promise<void>;
 
   /**
    * Cleanup resources

@@ -111,7 +111,9 @@ export class FileAttachmentCorrelationUtil {
     });
     
     // Check if there's a buffered file event waiting for this correlation
-    this.processBufferedFileEvent(correlationKey, sourcePlatform);
+    this.processBufferedFileEvent(correlationKey, sourcePlatform).catch(error => {
+      LogEngine.error('Error processing buffered file event', { correlationKey, error });
+    });
   }
 
   /**
@@ -213,7 +215,9 @@ export class FileAttachmentCorrelationUtil {
         
         // Restore the timeout and return without adding duplicate
         const timeoutId = setTimeout(() => {
-          this.processBufferedEventsAsUnknown(correlationKey);
+          this.processBufferedEventsAsUnknown(correlationKey).catch(error => {
+            LogEngine.error('Error processing buffered events as unknown', { correlationKey, error });
+          });
         }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
         existing.sharedTimeoutId = timeoutId;
         return;
@@ -243,7 +247,9 @@ export class FileAttachmentCorrelationUtil {
       
       // Create new shared timeout for the updated buffer
       const timeoutId = setTimeout(() => {
-        this.processBufferedEventsAsUnknown(correlationKey);
+        this.processBufferedEventsAsUnknown(correlationKey).catch(error => {
+          LogEngine.error('Error processing buffered events as unknown', { correlationKey, error });
+        });
       }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
       existing.sharedTimeoutId = timeoutId;
       
@@ -258,7 +264,9 @@ export class FileAttachmentCorrelationUtil {
       
       // Create timeout for fallback processing
       const timeoutId = setTimeout(() => {
-        this.processBufferedEventsAsUnknown(correlationKey);
+        this.processBufferedEventsAsUnknown(correlationKey).catch(error => {
+          LogEngine.error('Error processing buffered events as unknown', { correlationKey, error });
+        });
       }, this.FILE_ATTACHMENT_BUFFER_TIMEOUT);
       
       // Store buffered events
@@ -281,7 +289,7 @@ export class FileAttachmentCorrelationUtil {
   /**
    * Process buffered file events when correlation becomes available
    */
-  private processBufferedFileEvent(correlationKey: string, sourcePlatform: string): void {
+  private async processBufferedFileEvent(correlationKey: string, sourcePlatform: string): Promise<void> {
     // Safety check: skip processing if correlation key is empty to prevent wrong event processing
     if (!correlationKey || correlationKey.trim() === '') {
       LogEngine.warn('Skipping buffered event processing - empty correlation key', {
@@ -306,23 +314,25 @@ export class FileAttachmentCorrelationUtil {
         eventIds: bufferedEvents.events.map(e => e.eventData.eventId)
       });
       
-      // Process each buffered event
-      bufferedEvents.events.forEach((bufferedEvent, index) => {
-        LogEngine.debug(`Processing buffered event ${index + 1}/${bufferedEvents.events.length}`, {
+      // Process each buffered event sequentially
+      let index = 0;
+      for (const bufferedEvent of bufferedEvents.events) {
+        index++;
+        LogEngine.debug(`Processing buffered event ${index}/${bufferedEvents.events.length}`, {
           eventId: bufferedEvent.eventData.eventId,
           bufferedFor: Date.now() - bufferedEvent.bufferedAt
         });
         
-        // Trigger callback to continue processing
-        this.onBufferedEventReady?.(bufferedEvent.eventData, sourcePlatform);
-      });
+        // Trigger callback to continue processing and await completion
+        await this.onBufferedEventReady?.(bufferedEvent.eventData, sourcePlatform);
+      }
     }
   }
 
   /**
    * Process buffered events as unknown when timeout expires
    */
-  private processBufferedEventsAsUnknown(correlationKey: string): void {
+  private async processBufferedEventsAsUnknown(correlationKey: string): Promise<void> {
     // Safety check: skip processing if correlation key is empty
     if (!correlationKey || correlationKey.trim() === '') {
       LogEngine.warn('Skipping timeout processing - empty correlation key');
@@ -341,16 +351,18 @@ export class FileAttachmentCorrelationUtil {
         processedAs: 'unknown'
       });
       
-      // Process each buffered event as unknown
-      bufferedEvents.events.forEach((bufferedEvent, index) => {
-        LogEngine.debug(`Processing timed-out event ${index + 1}/${bufferedEvents.events.length} as unknown`, {
+      // Process each buffered event as unknown sequentially
+      let index = 0;
+      for (const bufferedEvent of bufferedEvents.events) {
+        index++;
+        LogEngine.debug(`Processing timed-out event ${index}/${bufferedEvents.events.length} as unknown`, {
           eventId: bufferedEvent.eventData.eventId,
           bufferedFor: Date.now() - bufferedEvent.bufferedAt
         });
         
-        // Process as unknown
-        this.onBufferedEventReady?.(bufferedEvent.eventData, 'unknown');
-      });
+        // Process as unknown and await completion
+        await this.onBufferedEventReady?.(bufferedEvent.eventData, 'unknown');
+      }
     }
   }
 

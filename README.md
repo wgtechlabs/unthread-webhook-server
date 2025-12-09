@@ -68,6 +68,8 @@ Server runs on `http://localhost:3000` with endpoints:
 - **Comprehensive Logging**: Detailed operation logs with emoji indicators
 - **Health Monitoring**: Built-in health checks for system status
 - **TypeScript**: Full type safety throughout the codebase
+- **Security-First Linting**: ESLint with comprehensive security plugins (security, no-secrets, promise handling)
+- **Code Quality**: Automated code quality checks with TypeScript-ESLint integration
 
 ## 🚂 One-Click Deploy
 
@@ -221,6 +223,26 @@ pnpm type-check # TypeScript type checking only
 pnpm dev        # Development with hot-reload
 pnpm start      # Run production build
 ```
+
+### Code Quality & Linting
+
+This project enforces strict code quality and security standards using ESLint with comprehensive security plugins.
+
+```bash
+pnpm lint              # Run ESLint on all source files
+pnpm lint:fix          # Run ESLint with auto-fix
+pnpm lint:security     # Focus on security-related issues
+pnpm lint:ci           # CI-friendly linting (fails on warnings)
+```
+
+**Security Plugins Enabled:**
+- `eslint-plugin-security` - Detects common security vulnerabilities
+- `eslint-plugin-no-secrets` - Prevents hardcoded secrets and credentials
+- `eslint-plugin-n` - Node.js best practices and deprecated API detection
+- `eslint-plugin-import` - Validates ES6 import/export syntax
+- `eslint-plugin-promise` - Ensures proper promise handling
+
+For detailed ESLint configuration and security rules, see [ESLINT.md](./ESLINT.md).
 
 ### Project Structure
 

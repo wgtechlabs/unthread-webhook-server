@@ -68,13 +68,12 @@ pnpm build
 
 # Type checking only
 pnpm type-check
-yarn type-check
 
 # Linting
-yarn lint              # Run ESLint on all source files
-yarn lint:fix          # Run ESLint with auto-fix
-yarn lint:security     # Focus on security-related issues
-yarn lint:ci           # CI-friendly linting (fails on warnings)
+pnpm lint              # Run ESLint on all source files
+pnpm lint:fix          # Run ESLint with auto-fix
+pnpm lint:security     # Focus on security-related issues
+pnpm lint:ci           # CI-friendly linting (fails on warnings)
 
 # Clean build artifacts
 pnpm clean
@@ -133,21 +132,31 @@ This project uses **ESLint** with comprehensive security plugins to maintain cod
 
 ```bash
 # Check for issues
-yarn lint
+pnpm lint
 
 # Automatically fix issues
-yarn lint:fix
+pnpm lint:fix
 
 # Security-focused check
-yarn lint:security
+pnpm lint:security
 
 # CI mode (fails on warnings)
-yarn lint:ci
+pnpm lint:ci
 ```
+
+**Comprehensive ESLint Configuration:**
+
+This project uses a modern flat config format (`eslint.config.js`) with the following capabilities:
+- **TypeScript-first**: Full TypeScript-ESLint integration with strict type checking
+- **Security-focused**: Multiple security plugins working together to prevent vulnerabilities
+- **Customizable**: Tailored rules for webhook server security requirements
+- **IDE Integration**: Works seamlessly with VSCode ESLint extension
+
+For complete configuration details, see [ESLINT.md](./ESLINT.md).
 
 **Key Security Rules:**
 
-- **No hardcoded secrets** - Detects API keys, tokens, passwords in code
+- **No hardcoded secrets** - Detects API keys, tokens, passwords, webhook secrets in code
 - **Safe regular expressions** - Prevents ReDoS attacks
 - **Secure random generation** - Enforces crypto.randomBytes over Math.random
 - **Object injection protection** - Warns about unsafe object property access
@@ -156,10 +165,25 @@ yarn lint:ci
 
 **Best Practices:**
 
-- Fix all linting errors before submitting PRs
-- Address security warnings unless there's a documented reason to ignore them
-- Use ESLint disable comments sparingly and only with justification
-- VSCode users get automatic linting and auto-fix on save
+- **Fix all linting errors** before submitting PRs (required)
+- **Address security warnings** unless there's a documented reason to ignore them
+- **Use ESLint disable comments sparingly** and only with proper justification
+- **Run `pnpm lint:fix`** to auto-fix style issues before committing
+- **Test security rules** with `pnpm lint:security` for security-focused checks
+- **VSCode users** get automatic linting and auto-fix on save with ESLint extension
+- **Document any rule disables** in code comments explaining why they're necessary
+
+**When to Disable Rules:**
+
+```typescript
+// ✅ Good - documented reason
+// eslint-disable-next-line security/detect-object-injection
+const value = obj[key]; // key is from typed enum, safe
+
+// ❌ Bad - no justification
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const data: any = response;
+```
 
 #### 🧪 Testing Guidelines
 
@@ -176,13 +200,11 @@ While this project doesn't currently have a test suite, when contributing:
 1. **Pre-submission checks**:
    - [ ] Code builds without errors (`pnpm build`)
    - [ ] TypeScript type checking passes (`pnpm type-check`)
+   - [ ] Linting passes without errors (`pnpm lint`)
    - [ ] Development server starts successfully (`pnpm dev`)
-   - [ ] Code builds without errors (`yarn build`)
-   - [ ] TypeScript type checking passes (`yarn type-check`)
-   - [ ] Linting passes without errors (`yarn lint`)
-   - [ ] Development server starts successfully (`yarn dev`)
    - [ ] Redis integration works properly
    - [ ] Error handling is comprehensive
+   - [ ] No security warnings from `pnpm lint:security`
 
 2. **Pull Request Requirements**:
    - [ ] Target the `dev` branch (PRs to `main` will be rejected)

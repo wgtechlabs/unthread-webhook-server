@@ -12,6 +12,7 @@ function parseRedisConfig() {
     
     try {
         const url = new URL(redisUrl);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const config: any = {
             host: url.hostname,
             port: parseInt(url.port) || 6379,

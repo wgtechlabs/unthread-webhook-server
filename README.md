@@ -242,7 +242,7 @@ pnpm lint:ci           # CI-friendly linting (fails on warnings)
 - `eslint-plugin-import` - Validates ES6 import/export syntax
 - `eslint-plugin-promise` - Ensures proper promise handling
 
-For detailed ESLint configuration and security rules, see [ESLINT.md](./ESLINT.md).
+For detailed ESLint configuration and security rules, see [eslint.config.js](./eslint.config.js).
 
 ### Project Structure
 

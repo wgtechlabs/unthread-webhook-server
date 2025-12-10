@@ -158,7 +158,7 @@ This project uses a modern flat config format (`eslint.config.js`) with the foll
 - **Customizable**: Tailored rules for webhook server security requirements
 - **IDE Integration**: Works seamlessly with VSCode ESLint extension
 
-For complete configuration details, see [ESLINT.md](./ESLINT.md).
+For complete configuration details, see [eslint.config.js](./eslint.config.js).
 
 **Key Security Rules:**
 

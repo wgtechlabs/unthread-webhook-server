@@ -43,7 +43,7 @@
     "@wgtechlabs/log-engine": "2.2.0",
     "dotenv": "^16.4.0",
     "express": "^4.21.0",
-    "express-validator": "^7.2.0",
+    "express-validator": "^7.3.1",
     "global": "4.4.0",
     "npm": "11.4.2",
     "redis": "^4.7.0"

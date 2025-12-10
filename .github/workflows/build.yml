@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'pnpm'
           
       - name: Install dependencies
@@ -72,7 +72,7 @@ jobs:
           
           # Build Arguments
           build-args: |
-            NODE_VERSION=22.16-alpine3.21
+            NODE_VERSION=22.21-alpine3.23
             RAILWAY_SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID }}
           
           # Labels

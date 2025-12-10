@@ -1,4 +1,4 @@
-# Unthread Webhook Server 🎫⚡ [![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs)
+# Unthread Webhook Server 🎫🛰️
 
 [![release workflow](https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/release.yml?branch=main&style=flat-square&logo=github&labelColor=181717&label=release)](https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/release.yml) [![build workflow](https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/build.yml?branch=dev&style=flat-square&logo=github&labelColor=181717&label=build)](https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/build.yml) [![node](https://img.shields.io/badge/node-%3E%3D22-green.svg?style=flat-square&labelColor=181717&logo=node.js&logoColor=white)](https://nodejs.org/) [![typescript](https://img.shields.io/badge/typescript-5.x-blue.svg?style=flat-square&labelColor=181717&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs) [![version](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square&label=version)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/license)
 
@@ -378,7 +378,7 @@ Contributions are welcome, create a pull request to this repo and I will review 
 
 When contributing, please ensure your code follows the existing TypeScript patterns and includes appropriate error handling.
 
-## � Recent Updates
+## 🔄 Recent Updates
 
 ### v1.0.0-beta.5.2 - File Attachment Intelligence
 
@@ -399,7 +399,7 @@ When contributing, please ensure your code follows the existing TypeScript patte
 - Set `TARGET_PLATFORM` in your `.env` file (e.g., `telegram`, `discord`)
 - Existing integrations will continue to work - new `attachments` field is additive
 
-## �🙏 Sponsor
+## 🙏 Sponsor
 
 Like this project? **Leave a star**! ⭐⭐⭐⭐⭐
 
@@ -425,5 +425,3 @@ This project is created by **[Waren Gonzaga](https://github.com/warengonzaga)** 
 ---
 
 💻 Made with ❤️ by [Waren Gonzaga](https://warengonzaga.com) under [WG Technology Labs](https://wgtechlabs.com)
-
-<!-- GitAds-Verify: 46GGWGNHH1QGNNWIX2XENTW6AQHPRY1C -->

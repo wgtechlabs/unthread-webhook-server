@@ -14,6 +14,10 @@ pids
 coverage/
 *.lcov
 
+# Test artifacts
+.vitest/
+test-results/
+
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
@@ -113,8 +117,10 @@ node_modules
 # Users Environment Variables
 .lock-wscript
 
-# IDEs and editors (shim for help)
-.vscode/
+# IDEs and editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo
@@ -132,8 +138,9 @@ Thumbs.db
 docs/
 ai_context/
 
-# Enforce Yarn usage - ignore npm lockfile
+# Enforce pnpm usage - ignore npm and yarn lockfiles
 package-lock.json
+yarn.lock
 
 # Environment files with sensitive data
 .env
@@ -143,3 +150,5 @@ package-lock.json
 
 # Context folder
 context/
+# Snyk Security Extension - AI Rules (auto-generated)
+.github/instructions/snyk_rules.instructions.md

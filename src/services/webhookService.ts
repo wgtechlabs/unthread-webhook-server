@@ -230,6 +230,7 @@ export class WebhookService {
         
         // Check if all required fields are present
         for (const field of requiredFields) {
+            // eslint-disable-next-line security/detect-object-injection
             if (!event[field]) {
                 const error = `Missing required field: ${field}`;
                 LogEngine.error(error);

@@ -1,10 +1,6 @@
 # Unthread Webhook Server 🎫🛰️
 
-[![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs) [![official](https://img.shields.io/badge/official-Unthread%20Extension-FF5241.svg?logo=discord&logoColor=white&labelColor=181717&style=flat-square)](https://unthread.com) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs)
-
-[![banner](https://raw.githubusercontent.com/wgtechlabs/unthread-webhook-server/main/.github/assets/repo_banner.jpg)](https://github.com/wgtechlabs/unthread-webhook-server)
-
-[![release workflow](https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/release.yml?style=flat-square&logo=github&labelColor=181717&label=release)](https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/release.yml) [![build workflow](https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/build.yml?branch=dev&style=flat-square&logo=github&labelColor=181717&label=build)](https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/build.yml) [![version](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square&label=version)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/license)
+[![release workflow](https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/release.yml?branch=main&style=flat-square&logo=github&labelColor=181717&label=release)](https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/release.yml) [![build workflow](https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/build.yml?branch=dev&style=flat-square&logo=github&labelColor=181717&label=build)](https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/build.yml) [![node](https://img.shields.io/badge/node-%3E%3D22-green.svg?style=flat-square&labelColor=181717&logo=node.js&logoColor=white)](https://nodejs.org/) [![typescript](https://img.shields.io/badge/typescript-5.x-blue.svg?style=flat-square&labelColor=181717&logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs) [![version](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square&label=version)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/license)
 
 A reliable, production-ready Node.js server for processing Unthread.io webhooks with signature verification and smart platform handling. Built with TypeScript, Express.js, and Redis, this webhook server provides secure HMAC-SHA256 signature validation, intelligent event deduplication, seamless integration with multiple platforms including Discord and Telegram, and **advanced file attachment correlation** that accurately detects source platforms for file uploads. The server automatically detects event sources, processes various webhook events (conversations, messages, status updates), correlates file attachments with their originating platforms, and efficiently queues them through Redis for downstream consumption by your bot applications, ensuring reliable and scalable webhook processing for your Unthread.io integrations.
 
@@ -21,14 +17,13 @@ These outstanding organizations partner with us to support our open-source work:
 | <div align="center"><a href="https://unthread.com" target="_blank"><b>Unthread</b></a><br/>Streamlined support ticketing for modern teams.</div> |
 <!-- markdownlint-enable MD033 -->
 
-
 ## 🚀 Quick Start
 
-**Requirements**: Node.js 20+, Redis, Yarn
+**Requirements**: Node.js 22+, Redis, pnpm
 
 ```bash
 # 1. Install dependencies
-yarn install
+pnpm install
 
 # 2. Configure environment
 cp .env.example .env
@@ -41,37 +36,44 @@ sudo systemctl start redis-server     # Linux
 docker run -d -p 6379:6379 redis:alpine  # Docker
 
 # 4. Run the server
-yarn dev        # Development with auto-reload
-yarn start      # Production mode
+pnpm dev        # Development with auto-reload
+pnpm start      # Production mode
 ```
 
 Server runs on `http://localhost:3000` with endpoints:
+
 - `GET /health` - Health check
 - `POST /unthread-webhook` - Webhook endpoint
 
 ## ✨ Features
 
 ### 🔐 Security & Reliability
+
 - **HMAC-SHA256 Signature Verification**: Secure webhook authentication
 - **Event Deduplication**: Redis-based TTL cache prevents duplicate processing
 - **Rate Limiting**: Built-in protection against spam and abuse
 
 ### 🎯 Smart Platform Detection
+
 - **Intelligent Source Identification**: Automatically detects Dashboard vs. target platform events
 - **File Attachment Correlation**: Revolutionary system that links file uploads with their true source platforms
 - **Multi-Platform Support**: Discord, Telegram, and extensible for other platforms
 
 ### 📎 Advanced File Handling
+
 - **Source Platform Accuracy**: Eliminates "unknown" file sources through intelligent correlation
 - **Rich Metadata Generation**: Automatic file summaries with counts, sizes, types, and names
 - **Multi-Event Buffering**: Handles multiple file attachments with timeout-based processing
 - **Memory-Based Correlation**: 15-second correlation windows with automatic fallbacks
 
 ### 🚀 Production-Ready Architecture
+
 - **Redis Queue Integration**: Efficient FIFO event processing
 - **Comprehensive Logging**: Detailed operation logs with emoji indicators
 - **Health Monitoring**: Built-in health checks for system status
 - **TypeScript**: Full type safety throughout the codebase
+- **Security-First Linting**: ESLint with comprehensive security plugins (security, no-secrets, promise handling)
+- **Code Quality**: Automated code quality checks with TypeScript-ESLint integration
 
 ## 🚂 One-Click Deploy
 
@@ -108,6 +110,12 @@ docker-compose down
 - `.env` - Single config file for both local development and Docker
 - `.env.example` - Template with default values
 - `.env.railway` - Railway deployment template
+
+## 🏗️ Development Container
+
+Dev container with Node.js 22.16, pnpm, and essential VS Code extensions (Copilot, ESLint, Docker, GitLens).
+
+**Quick Start:** Open in VS Code → Click "Reopen in Container" → Start coding
 
 ## ⚙️ Configuration
 
@@ -160,6 +168,7 @@ This server features advanced file attachment correlation that:
 ## 📊 Event Processing
 
 ### Supported Events
+
 - `url_verification` - Automatic URL verification
 - `conversation_created` - New conversations
 - `conversation_updated` - Status changes  
@@ -202,6 +211,7 @@ Events are queued with this enhanced structure:
 ```
 
 **New Enhancement**: Events with file attachments now include an `attachments` metadata object providing:
+
 - `hasFiles`: Boolean indicating presence of files
 - `fileCount`: Total number of attached files  
 - `totalSize`: Combined size of all files in bytes
@@ -213,16 +223,37 @@ Events are queued with this enhanced structure:
 ### Build Commands
 
 ```bash
-yarn clean      # Clean previous builds
-yarn build      # Build for production
-yarn type-check # TypeScript type checking only
-yarn dev        # Development with hot-reload
-yarn start      # Run production build
+pnpm clean      # Clean previous builds
+pnpm build      # Build for production
+pnpm type-check # TypeScript type checking only
+pnpm dev        # Development with hot-reload
+pnpm start      # Run production build
 ```
+
+### Code Quality & Linting
+
+This project enforces strict code quality and security standards using ESLint with comprehensive security plugins.
+
+```bash
+pnpm lint              # Run ESLint on all source files
+pnpm lint:fix          # Run ESLint with auto-fix
+pnpm lint:security     # Focus on security-related issues
+pnpm lint:ci           # CI-friendly linting (fails on warnings)
+```
+
+**Security Plugins Enabled:**
+
+- `eslint-plugin-security` - Detects common security vulnerabilities
+- `eslint-plugin-no-secrets` - Prevents hardcoded secrets and credentials
+- `eslint-plugin-n` - Node.js best practices and deprecated API detection
+- `eslint-plugin-import` - Validates ES6 import/export syntax
+- `eslint-plugin-promise` - Ensures proper promise handling
+
+For detailed ESLint configuration and security rules, see [eslint.config.js](./eslint.config.js).
 
 ### Project Structure
 
-```
+```text
 src/
 ├── app.ts              # Main application entry
 ├── config/             # Configuration files
@@ -243,6 +274,44 @@ src/
     └── fileAttachmentCorrelation.ts  # File correlation system
 ```
 
+## 🧪 Testing
+
+This project uses [Vitest](https://vitest.dev/) for fast, modern testing with first-class TypeScript support.
+
+### Running Tests
+
+```bash
+# Run all tests (one-time)
+pnpm test
+
+# Run tests in watch mode (development)
+pnpm test:watch
+
+# Run tests with interactive UI
+pnpm test:ui
+
+# Generate coverage report
+pnpm test:coverage
+```
+
+### Writing Tests
+
+Tests are co-located with source files using the `.test.ts` suffix:
+
+```text
+src/
+├── utils/
+│   ├── signature.ts
+│   └── signature.test.ts
+```
+
+### Coverage Requirements
+
+- Lines: 80%
+- Functions: 80%
+- Branches: 80%
+- Statements: 80%
+
 ## 🔍 Monitoring
 
 ### Health Check
@@ -252,6 +321,7 @@ curl http://localhost:3000/health
 ```
 
 **Healthy Response:**
+
 ```json
 {
   "status": "OK",
@@ -261,6 +331,7 @@ curl http://localhost:3000/health
 ```
 
 **Error Response:**
+
 ```json
 {
   "status": "ERROR", 
@@ -325,6 +396,7 @@ When contributing, please ensure your code follows the existing TypeScript patte
 **Major Enhancement**: Revolutionary file attachment correlation system that eliminates "unknown" source platforms.
 
 **New Features:**
+
 - **Smart File Correlation**: Memory-based system that links file uploads with their originating platforms
 - **Rich Attachment Metadata**: Automatic generation of file summaries for easier integration
 - **Multi-Event Buffering**: Handles multiple files per conversation with robust timeout management
@@ -332,10 +404,12 @@ When contributing, please ensure your code follows the existing TypeScript patte
 - **Production-Ready**: Comprehensive error handling, logging, and resource cleanup
 
 **Breaking Changes:**
+
 - `TARGET_PLATFORM` is now required (no default value)
 - Enhanced Redis queue format includes `attachments` metadata object
 
 **Migration Guide:**
+
 - Set `TARGET_PLATFORM` in your `.env` file (e.g., `telegram`, `discord`)
 - Existing integrations will continue to work - new `attachments` field is additive
 

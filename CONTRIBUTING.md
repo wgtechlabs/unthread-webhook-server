@@ -200,7 +200,7 @@ This project uses [Vitest](https://vitest.dev/) for automated testing. When cont
 - Ensure all tests pass: `pnpm test`
 - Maintain minimum 80% code coverage: `pnpm test:coverage`
 - Follow co-located test patterns (e.g., `signature.ts` → `signature.test.ts`)
-- See [TESTING.md](./TESTING.md) for detailed testing documentation
+- Use `pnpm test:watch` for development, `pnpm test:ui` for interactive testing
 
 **Manual Testing:**
 - Test your changes using tools like ngrok for webhook testing

@@ -118,7 +118,7 @@ src/
 - **Error Handling**: Implement comprehensive error handling with detailed logging
 - **Package Manager**: Use pnpm exclusively (enforced via preinstall script)
 - **Code Style**: Follow existing patterns and maintain consistency
-- **Environment**: Use Node.js 20+ for development
+- **Environment**: Use Node.js 22+ for development
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
 - **Webhook Integration**: Ensure compatibility with [`wgtechlabs/unthread-telegram-bot`](https://github.com/wgtechlabs/unthread-telegram-bot)
 

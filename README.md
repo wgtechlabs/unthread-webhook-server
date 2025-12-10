@@ -17,7 +17,6 @@ These outstanding organizations partner with us to support our open-source work:
 | <div align="center"><a href="https://unthread.com" target="_blank"><b>Unthread</b></a><br/>Streamlined support ticketing for modern teams.</div> |
 <!-- markdownlint-enable MD033 -->
 
-
 ## 🚀 Quick Start
 
 **Requirements**: Node.js 22+, Redis, pnpm
@@ -42,28 +41,33 @@ pnpm start      # Production mode
 ```
 
 Server runs on `http://localhost:3000` with endpoints:
+
 - `GET /health` - Health check
 - `POST /unthread-webhook` - Webhook endpoint
 
 ## ✨ Features
 
 ### 🔐 Security & Reliability
+
 - **HMAC-SHA256 Signature Verification**: Secure webhook authentication
 - **Event Deduplication**: Redis-based TTL cache prevents duplicate processing
 - **Rate Limiting**: Built-in protection against spam and abuse
 
 ### 🎯 Smart Platform Detection
+
 - **Intelligent Source Identification**: Automatically detects Dashboard vs. target platform events
 - **File Attachment Correlation**: Revolutionary system that links file uploads with their true source platforms
 - **Multi-Platform Support**: Discord, Telegram, and extensible for other platforms
 
 ### 📎 Advanced File Handling
+
 - **Source Platform Accuracy**: Eliminates "unknown" file sources through intelligent correlation
 - **Rich Metadata Generation**: Automatic file summaries with counts, sizes, types, and names
 - **Multi-Event Buffering**: Handles multiple file attachments with timeout-based processing
 - **Memory-Based Correlation**: 15-second correlation windows with automatic fallbacks
 
 ### 🚀 Production-Ready Architecture
+
 - **Redis Queue Integration**: Efficient FIFO event processing
 - **Comprehensive Logging**: Detailed operation logs with emoji indicators
 - **Health Monitoring**: Built-in health checks for system status
@@ -164,6 +168,7 @@ This server features advanced file attachment correlation that:
 ## 📊 Event Processing
 
 ### Supported Events
+
 - `url_verification` - Automatic URL verification
 - `conversation_created` - New conversations
 - `conversation_updated` - Status changes  
@@ -206,6 +211,7 @@ Events are queued with this enhanced structure:
 ```
 
 **New Enhancement**: Events with file attachments now include an `attachments` metadata object providing:
+
 - `hasFiles`: Boolean indicating presence of files
 - `fileCount`: Total number of attached files  
 - `totalSize`: Combined size of all files in bytes
@@ -236,6 +242,7 @@ pnpm lint:ci           # CI-friendly linting (fails on warnings)
 ```
 
 **Security Plugins Enabled:**
+
 - `eslint-plugin-security` - Detects common security vulnerabilities
 - `eslint-plugin-no-secrets` - Prevents hardcoded secrets and credentials
 - `eslint-plugin-n` - Node.js best practices and deprecated API detection
@@ -246,7 +253,7 @@ For detailed ESLint configuration and security rules, see [eslint.config.js](./e
 
 ### Project Structure
 
-```
+```text
 src/
 ├── app.ts              # Main application entry
 ├── config/             # Configuration files
@@ -290,7 +297,8 @@ pnpm test:coverage
 ### Writing Tests
 
 Tests are co-located with source files using the `.test.ts` suffix:
-```
+
+```text
 src/
 ├── utils/
 │   ├── signature.ts
@@ -298,6 +306,7 @@ src/
 ```
 
 ### Coverage Requirements
+
 - Lines: 80%
 - Functions: 80%
 - Branches: 80%
@@ -312,6 +321,7 @@ curl http://localhost:3000/health
 ```
 
 **Healthy Response:**
+
 ```json
 {
   "status": "OK",
@@ -321,6 +331,7 @@ curl http://localhost:3000/health
 ```
 
 **Error Response:**
+
 ```json
 {
   "status": "ERROR", 
@@ -385,6 +396,7 @@ When contributing, please ensure your code follows the existing TypeScript patte
 **Major Enhancement**: Revolutionary file attachment correlation system that eliminates "unknown" source platforms.
 
 **New Features:**
+
 - **Smart File Correlation**: Memory-based system that links file uploads with their originating platforms
 - **Rich Attachment Metadata**: Automatic generation of file summaries for easier integration
 - **Multi-Event Buffering**: Handles multiple files per conversation with robust timeout management
@@ -392,10 +404,12 @@ When contributing, please ensure your code follows the existing TypeScript patte
 - **Production-Ready**: Comprehensive error handling, logging, and resource cleanup
 
 **Breaking Changes:**
+
 - `TARGET_PLATFORM` is now required (no default value)
 - Enhanced Redis queue format includes `attachments` metadata object
 
 **Migration Guide:**
+
 - Set `TARGET_PLATFORM` in your `.env` file (e.g., `telegram`, `discord`)
 - Existing integrations will continue to work - new `attachments` field is additive
 

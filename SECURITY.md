@@ -40,7 +40,7 @@ We provide security updates for the following versions. If you're using an unsup
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.x     | ✅ Yes             |
+| 1.0.x   | ✅ Yes             |
 | < 1.0   | ❌ No              |
 
 ## 🔐 Security Best Practices

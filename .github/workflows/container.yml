@@ -1,0 +1,54 @@
+name: Container
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-production:
+    name: Build Production Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build and Push Production Container
+        uses: wgtechlabs/container-build-flow-action@v1.3.1
+        with:
+          # Registry Configuration
+          registry: both
+          dockerhub-username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+          # Branch Configuration
+          main-branch: main
+          dev-branch: dev
+
+          # Image Configuration
+          image-name: unthread-webhook-server
+          dockerfile: ./Dockerfile
+          context: .
+          platforms: linux/amd64,linux/arm64
+
+          # Build Arguments
+          build-args: |
+            NODE_VERSION=22.21-alpine3.23
+            RAILWAY_SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID }}
+
+          # Labels
+          labels: |
+            org.opencontainers.image.title=Unthread Webhook Server
+            org.opencontainers.image.description=A reliable, production-ready Node.js server for processing Unthread.io webhooks with signature verification and smart platform handling.
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.url=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.licenses=GPL-3.0
+
+          # Features
+          cache-enabled: true
+          provenance: true
+          sbom: true

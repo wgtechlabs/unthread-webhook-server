@@ -206,11 +206,18 @@ export class WebhookService {
         }
 
         // SECONDARY DETECTION: botName pattern matching (fallback)
+        // Supports multiple platform patterns:
+        //   - @username format (e.g., Discord bots)
+        //   - Phone number format (e.g., WhatsApp via Twilio: +1234567890)
         if (event.data?.botName) {
             const botName = event.data.botName;
             if (typeof botName === 'string') {
-                if (botName.startsWith('@')) {
-                    LogEngine.debug(`Platform detected via botName pattern: ${config.targetPlatform} (${event.eventId})`);
+                const isAtMention = botName.startsWith('@');
+                const isPhoneNumber = /^\+?\d[\d\s\-()]{6,}$/.test(botName.trim());
+
+                if (isAtMention || isPhoneNumber) {
+                    const pattern = isAtMention ? '@mention' : 'phone number';
+                    LogEngine.debug(`Platform detected via botName ${pattern} pattern: ${config.targetPlatform} (${event.eventId})`);
                     return config.targetPlatform;
                 } else {
                     LogEngine.debug(`Platform detected via botName pattern: dashboard (${event.eventId})`);

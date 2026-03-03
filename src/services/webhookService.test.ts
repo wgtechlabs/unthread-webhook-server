@@ -33,7 +33,7 @@ vi.mock('../config/redis', () => ({
         quit: vi.fn(),
     },
     redisEventConfig: {
-        keyPrefix: 'webhook:event:',
+        keyPrefix: 'unthread:eventid:',
         fingerprintPrefix: 'unthread:fp:',
         eventTtl: 259200,
     }
@@ -489,7 +489,7 @@ describe('WebhookService', () => {
             expect(redisClient.lPush).not.toHaveBeenCalled();
             // Should have marked eventId for faster future lookups
             expect(redisClient.setEx).toHaveBeenCalledWith(
-                expect.stringContaining('webhook:event:'),
+                expect.stringContaining('unthread:eventid:'),
                 expect.any(Number),
                 'processed'
             );

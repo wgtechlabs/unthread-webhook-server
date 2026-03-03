@@ -152,3 +152,5 @@ yarn.lock
 context/
 # Snyk Security Extension - AI Rules (auto-generated)
 .github/instructions/snyk_rules.instructions.md
+
+.contributerc.json

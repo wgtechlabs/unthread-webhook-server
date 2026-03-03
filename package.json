@@ -42,7 +42,7 @@
   "dependencies": {
     "@wgtechlabs/log-engine": "2.3.1",
     "dotenv": "^16.4.0",
-    "express": "^4.21.0",
+    "express": "^5.2.1",
     "express-validator": "^7.3.1",
     "global": "4.4.0",
     "npm": "11.4.2",
@@ -50,7 +50,7 @@
   },
   "devDependencies": {
     "@eslint/js": "9.36.0",
-    "@types/express": "^5.0.2",
+    "@types/express": "^5.0.6",
     "@types/node": "^22.15.26",
     "@typescript-eslint/eslint-plugin": "8.45.0",
     "@typescript-eslint/parser": "8.45.0",

@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@wgtechlabs/log-engine':
-        specifier: 2.2.0
-        version: 2.2.0
+        specifier: 2.3.1
+        version: 2.3.1
       dotenv:
         specifier: ^16.4.0
         version: 16.6.1
@@ -691,8 +691,8 @@ packages:
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
 
-  '@wgtechlabs/log-engine@2.2.0':
-    resolution: {integrity: sha512-TIvzfDPiWUWW7EX+kZ3q7id12inpe6t9n/OIX9ewIHaBeA7q8YY631f2RjHdkB33Wew9A0H1HGzTx98nKan+MQ==}
+  '@wgtechlabs/log-engine@2.3.1':
+    resolution: {integrity: sha512-qYwGef4KjcWpFvfC/e6uum/Q2ICTJbaXBZf+qCDmho1rNZ/umqyeDH3Cvk86e2Jy5TkDFPA+rOcTkmrM1rGKkw==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
 
   accepts@1.3.8:
@@ -2896,7 +2896,7 @@ snapshots:
       loupe: 3.2.1
       tinyrainbow: 2.0.0
 
-  '@wgtechlabs/log-engine@2.2.0': {}
+  '@wgtechlabs/log-engine@2.3.1': {}
 
   accepts@1.3.8:
     dependencies:

@@ -46,7 +46,7 @@ export class RedisService {
             const eventJson = JSON.stringify(event);
             
             // Log the complete transformed event data
-            LogEngine.debug(`⚡ TRANSFORMED WEBHOOK EVENT:`, {
+            LogEngine.debug(`TRANSFORMED WEBHOOK EVENT:`, {
                 eventId: event.data?.eventId || 'unknown',
                 completeTransformedData: event
             });
@@ -54,7 +54,7 @@ export class RedisService {
             // Use Redis LIST for FIFO queue (LPUSH + BRPOP pattern)
             const result = await this.client.lPush(queueName, eventJson);
             
-            LogEngine.info(`✅ Event successfully queued: ${event.data?.eventId || 'unknown'} -> ${queueName} (${result} items in queue)`);
+            LogEngine.info(`Event successfully queued: ${event.data?.eventId || 'unknown'} -> ${queueName} (${result} items in queue)`);
             return result;
         } catch (err) {
             LogEngine.error(`Error publishing event to queue: ${err}`);

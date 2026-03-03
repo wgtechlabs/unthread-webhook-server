@@ -58,6 +58,9 @@ export class WebhookService {
         // Atomically claim fingerprint slot (retry with new eventId detection)
         // Uses SET NX to combine check+mark into a single atomic operation
         const fingerprint = this.generateFingerprint(event);
+        if (!fingerprint && event.event !== 'url_verification') {
+            LogEngine.warn(`No fingerprint generated for event ${event.eventId} — falling back to eventId-only dedup`);
+        }
         if (fingerprint) {
             const claimed = await this.redisService.claimFingerprint(fingerprint);
             if (!claimed) {
@@ -103,6 +106,8 @@ export class WebhookService {
         const targetPlatform = config.targetPlatform;
         const attachmentMetadata = this.generateAttachmentMetadata(unthreadEvent);
         
+        const fingerprint = this.generateFingerprint(unthreadEvent);
+
         const message: RedisQueueMessage = {
             platform: "unthread",
             targetPlatform,
@@ -113,7 +118,8 @@ export class WebhookService {
                 originalEvent: unthreadEvent.event,
                 eventId: unthreadEvent.eventId,
                 eventTimestamp: unthreadEvent.eventTimestamp,
-                webhookTimestamp: unthreadEvent.webhookTimestamp
+                webhookTimestamp: unthreadEvent.webhookTimestamp,
+                ...(fingerprint && { fingerprint })
             },
             timestamp: Date.now()
         };

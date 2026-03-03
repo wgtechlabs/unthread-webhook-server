@@ -17,7 +17,7 @@ export class WebhookController {
     static initializeBackgroundProcessor(): void {
         if (!WebhookController.backgroundProcessor) {
             WebhookController.backgroundProcessor = new WebhookController();
-            LogEngine.log('🔄 Background webhook processor initialized');
+            LogEngine.log('Background webhook processor initialized');
         }
     }
 
@@ -34,7 +34,7 @@ export class WebhookController {
             const { event, eventId } = req.body;
 
             // Log raw incoming webhook data
-            LogEngine.debug(`🌐 RAW WEBHOOK RECEIVED:`, {
+            LogEngine.debug(`RAW WEBHOOK RECEIVED:`, {
                 eventId,
                 completeRawData: req.body
             });
@@ -48,7 +48,7 @@ export class WebhookController {
             // Quick validation only - no heavy processing
             const validationResult = this.webhookService.validateEvent(req.body);
             if (!validationResult.isValid) {
-                LogEngine.error(`❌ Event validation failed:`, validationResult.errors);
+                LogEngine.error(`Event validation failed:`, validationResult.errors);
                 return res.status(400).json({ 
                     error: 'Invalid event structure',
                     details: validationResult.errors 
@@ -71,7 +71,7 @@ export class WebhookController {
             // Queue event for background processing (non-blocking)
             this.queueEventForBackgroundProcessing(req.body, requestId);
             
-            LogEngine.debug(`⚡ Immediate response sent`, {
+            LogEngine.debug(`Immediate response sent`, {
                 eventId,
                 requestId,
                 responseTime: `${responseTime}ms`
@@ -81,7 +81,7 @@ export class WebhookController {
             
         } catch (error) {
             const responseTime = Date.now() - startTime;
-            LogEngine.error(`💥 Error handling webhook: ${error}`);
+            LogEngine.error(`Error handling webhook: ${error}`);
             return res.status(500).json({
                 error: 'Internal server error',
                 responseTime: `${responseTime}ms`,
@@ -106,12 +106,12 @@ export class WebhookController {
                         await this.processEventInBackground(event, requestId);
                     }
                 } catch (error) {
-                    LogEngine.error(`💥 Background processing failed:`, {
+                    LogEngine.error(`Background processing failed:`, {
                         requestId,
                         eventId: event?.eventId,
-                    error: error instanceof Error ? error.message : 'Unknown error'
-                });
-            }
+                        error: error instanceof Error ? error.message : 'Unknown error'
+                    });
+                }
             })();
         });
     }
@@ -123,7 +123,7 @@ export class WebhookController {
         const startTime = Date.now();
         
         try {
-            LogEngine.debug(`🔄 Background processing started`, {
+            LogEngine.debug(`Background processing started`, {
                 eventId: event?.eventId,
                 requestId
             });
@@ -133,7 +133,7 @@ export class WebhookController {
             await this.webhookService.processEvent(event);
             
             const processingTime = Date.now() - startTime;
-            LogEngine.info(`✅ Background processing completed`, {
+            LogEngine.info(`Background processing completed`, {
                 eventId: event?.eventId,
                 requestId,
                 processingTime: `${processingTime}ms`
@@ -141,7 +141,7 @@ export class WebhookController {
             
         } catch (error) {
             const processingTime = Date.now() - startTime;
-            LogEngine.error(`💥 Background processing failed:`, {
+            LogEngine.error(`Background processing failed:`, {
                 eventId: event?.eventId,
                 requestId,
                 processingTime: `${processingTime}ms`,

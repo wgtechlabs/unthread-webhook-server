@@ -63,14 +63,36 @@ export class RedisService {
     }
 
     /**
+     * Check if a key exists in Redis
+     * @param prefix - Key prefix (e.g., eventId or fingerprint prefix)
+     * @param id - Unique identifier to check
+     * @returns Promise<boolean> - true if key exists
+     */
+    private async keyExists(prefix: string, id: string): Promise<boolean> {
+        const key = `${prefix}${id}`;
+        const exists = await this.client.exists(key);
+        return exists === 1;
+    }
+
+    /**
+     * Mark a key as processed with automatic expiration
+     * @param prefix - Key prefix (e.g., eventId or fingerprint prefix)
+     * @param id - Unique identifier to mark
+     * @param ttlSeconds - Time to live in seconds (default: 3 days from config)
+     */
+    private async markKey(prefix: string, id: string, ttlSeconds?: number): Promise<void> {
+        const key = `${prefix}${id}`;
+        const ttl = ttlSeconds || redisEventConfig.eventTtl;
+        await this.client.setEx(key, ttl, 'processed');
+    }
+
+    /**
      * Check if webhook event already exists (duplicate detection)
      * @param eventId - Unique event identifier
      * @returns Promise<boolean> - true if event exists
      */
     async eventExists(eventId: string): Promise<boolean> {
-        const key = `${redisEventConfig.keyPrefix}${eventId}`;
-        const exists = await this.client.exists(key);
-        return exists === 1;
+        return this.keyExists(redisEventConfig.keyPrefix, eventId);
     }
 
     /**
@@ -79,9 +101,23 @@ export class RedisService {
      * @param ttlSeconds - Time to live in seconds (default: 3 days from config)
      */
     async markEventProcessed(eventId: string, ttlSeconds?: number): Promise<void> {
-        const key = `${redisEventConfig.keyPrefix}${eventId}`;
-        const ttl = ttlSeconds || redisEventConfig.eventTtl; // 3 days default
-        await this.client.setEx(key, ttl, 'processed');
+        return this.markKey(redisEventConfig.keyPrefix, eventId, ttlSeconds);
+    }
+
+    /**
+     * Atomically claim a composite fingerprint slot (SET NX pattern).
+     * Combines existence check and marking into a single atomic Redis operation,
+     * eliminating the race window between check and mark.
+     * 
+     * @param fingerprint - Composite key: eventTimestamp:event:data.id
+     * @param ttlSeconds - Time to live in seconds (default: 3 days from config)
+     * @returns Promise<boolean> - true if claimed (new), false if already exists (duplicate)
+     */
+    async claimFingerprint(fingerprint: string, ttlSeconds?: number): Promise<boolean> {
+        const key = `${redisEventConfig.fingerprintPrefix}${fingerprint}`;
+        const ttl = ttlSeconds || redisEventConfig.eventTtl;
+        const result = await this.client.set(key, 'processed', { EX: ttl, NX: true });
+        return result !== null;
     }
 
     async close(): Promise<void> {

@@ -11,9 +11,13 @@ import { validateEvent } from './middleware/validation';
 import { WebhookRequest } from './types';
 import { RedisService } from './services/redisService';
 
-// Configure LogEngine to use only local time (no ISO timestamp)
+// Configure LogEngine with no timestamps (emoji + level + message only)
 LogEngine.configure({ 
-  mode: LogMode.DEBUG
+  mode: LogMode.DEBUG,
+  format: {
+    includeIsoTimestamp: false,
+    includeLocalTime: false
+  }
 });
 
 const app = express();

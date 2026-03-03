@@ -48,11 +48,24 @@ export class WebhookService {
 
         await this.initializeServices();
 
-        // Check for duplicate events
+        // Check for duplicate events by eventId (exact retry)
         const eventExists = await this.redisService.eventExists(event.eventId);
         if (eventExists) {
             LogEngine.info(`Event already processed - duplicate detected: ${event.eventId}`);
             return;
+        }
+
+        // Atomically claim fingerprint slot (retry with new eventId detection)
+        // Uses SET NX to combine check+mark into a single atomic operation
+        const fingerprint = this.generateFingerprint(event);
+        if (fingerprint) {
+            const claimed = await this.redisService.claimFingerprint(fingerprint);
+            if (!claimed) {
+                LogEngine.info(`Event already processed - fingerprint duplicate detected: ${event.eventId} (fp: ${fingerprint})`);
+                // Mark eventId too so subsequent retries with same eventId are caught faster
+                await this.redisService.markEventProcessed(event.eventId);
+                return;
+            }
         }
 
         // Detect platform source (enhanced with file attachment correlation)
@@ -61,11 +74,13 @@ export class WebhookService {
         // Handle buffered events - they will be processed later via callback
         if (sourcePlatform === 'buffered') {
             // Mark buffered events as processed to prevent duplicate buffering on retries
+            // Note: fingerprint already claimed atomically above via SET NX
             await this.redisService.markEventProcessed(event.eventId);
             
             const processingTime = Date.now() - startTime;
             LogEngine.info('File attachment event buffered for correlation', {
                 eventId: event.eventId,
+                fingerprint,
                 hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event),
                 processingTime: `${processingTime}ms`
             });
@@ -78,6 +93,7 @@ export class WebhookService {
         const totalProcessingTime = Date.now() - startTime;
         LogEngine.debug(`Event processing completed`, {
             eventId: event.eventId,
+            fingerprint,
             sourcePlatform,
             totalProcessingTime: `${totalProcessingTime}ms`
         });
@@ -282,7 +298,7 @@ export class WebhookService {
             const transformedEvent = this.transformEvent(event, sourcePlatform);
             await this.redisService.publishEvent(transformedEvent);
             
-            // Mark as processed
+            // Mark eventId as processed
             await this.redisService.markEventProcessed(event.eventId);
             
         } catch (error) {
@@ -300,5 +316,24 @@ export class WebhookService {
      */
     destroy(): void {
         this.fileAttachmentCorrelation.destroy();
+    }
+
+    /**
+     * Generate a composite fingerprint for retry deduplication.
+     * Format: {eventTimestamp}:{event}:{data.id}
+     * 
+     * This catches Unthread retries that assign a new eventId to the same logical event.
+     * Returns null if insufficient data to generate a meaningful fingerprint.
+     */
+    private generateFingerprint(event: UnthreadWebhookEvent): string | null {
+        const eventTimestamp = event.eventTimestamp;
+        const eventType = event.event;
+        const dataId = event.data?.id;
+
+        if (!eventTimestamp || !eventType || !dataId) {
+            return null;
+        }
+
+        return `${eventTimestamp}:${eventType}:${dataId}`;
     }
 }

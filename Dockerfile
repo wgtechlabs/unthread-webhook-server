@@ -34,10 +34,9 @@ RUN apk update && apk upgrade && \
     apk add --no-cache dumb-init && \
     rm -rf /var/cache/apk/*
 
-# Enable and install pnpm via corepack
-# Note: Version must match packageManager field in package.json (currently 9.15.4)
-RUN corepack enable && \
-    corepack prepare pnpm@9.15.4 --activate
+# Install Bun for dependency management
+# Note: Version must match packageManager field in package.json (currently 1.3.11)
+RUN npm install --global bun@1.3.11
 
 # Set working directory for all subsequent stages
 WORKDIR /usr/src/app
@@ -51,10 +50,8 @@ FROM base AS deps
 # Use bind mounts and cache for faster builds
 # Downloads dependencies without copying package files into the layer
 RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-    --mount=type=bind,source=.npmrc,target=.npmrc \
-    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-pnpm-store,target=/root/.local/share/pnpm/store \
-    pnpm install --prod --frozen-lockfile
+    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-bun-cache,target=/root/.bun/install/cache \
+    bun install --production
 
 # =============================================================================
 # STAGE 3: Build Application  
@@ -64,14 +61,12 @@ FROM deps AS build
 
 # Install all dependencies (including devDependencies for building)
 RUN --mount=type=bind,source=package.json,target=package.json \
-    --mount=type=bind,source=pnpm-lock.yaml,target=pnpm-lock.yaml \
-    --mount=type=bind,source=.npmrc,target=.npmrc \
-    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-pnpm-store,target=/root/.local/share/pnpm/store \
-    pnpm install --frozen-lockfile
+    --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-bun-cache,target=/root/.bun/install/cache \
+    bun install
 
 # Copy source code and build the application
 COPY . .
-RUN pnpm run build
+RUN bun run build
 
 # =============================================================================
 # STAGE 4: Final Runtime Image

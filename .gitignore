@@ -138,8 +138,9 @@ Thumbs.db
 docs/
 ai_context/
 
-# Enforce pnpm usage - ignore npm and yarn lockfiles
+# Enforce bun usage - ignore non-bun lockfiles
 package-lock.json
+pnpm-lock.yaml
 yarn.lock
 
 # Environment files with sensitive data

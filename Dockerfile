@@ -4,10 +4,11 @@
 # Multi-stage Docker build for the Unthread Webhook Server
 # 
 # Build stages:
-# 1. base    - Base Alpine image with Node.js and security updates
-# 2. deps    - Install production dependencies only
-# 3. build   - Install dev dependencies and build the application
-# 4. final   - Create minimal runtime image with built app
+# 1. base     - Base Alpine image with Node.js and security updates (runtime)
+# 2. bun-base - base + Bun, used only for dependency install and build
+# 3. deps     - Install production dependencies only
+# 4. build    - Install dev dependencies and build the application
+# 5. final    - Minimal runtime image (no Bun) with built app
 #
 # Usage:
 #   docker build -t unthread-webhook-server .
@@ -34,24 +35,32 @@ RUN apk update && apk upgrade && \
     apk add --no-cache dumb-init && \
     rm -rf /var/cache/apk/*
 
+# Set working directory for all subsequent stages
+WORKDIR /usr/src/app
+
+# =============================================================================
+# STAGE 1b: Bun Base (build-time only)
+# =============================================================================
+# Bun is installed only in this stage so it never ends up in the final runtime
+# image, keeping the production image smaller and reducing attack surface.
+FROM base AS bun-base
+
 # Install Bun for dependency management
 # Note: Version must match packageManager field in package.json (currently 1.3.11)
 RUN npm install --global bun@1.3.11
-
-# Set working directory for all subsequent stages
-WORKDIR /usr/src/app
 
 # =============================================================================
 # STAGE 2: Production Dependencies
 # =============================================================================
 # Install only production dependencies for runtime
-FROM base AS deps
+FROM bun-base AS deps
 
 # Use bind mounts and cache for faster builds
-# Downloads dependencies without copying package files into the layer
+# Mount the Bun lockfile and use --frozen-lockfile for reproducible installs
 RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=bun.lock,target=bun.lock \
     --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-bun-cache,target=/root/.bun/install/cache \
-    bun install --production
+    bun install --production --frozen-lockfile
 
 # =============================================================================
 # STAGE 3: Build Application  
@@ -61,8 +70,9 @@ FROM deps AS build
 
 # Install all dependencies (including devDependencies for building)
 RUN --mount=type=bind,source=package.json,target=package.json \
+    --mount=type=bind,source=bun.lock,target=bun.lock \
     --mount=type=cache,id=s/${RAILWAY_SERVICE_ID}-bun-cache,target=/root/.bun/install/cache \
-    bun install
+    bun install --frozen-lockfile
 
 # Copy source code and build the application
 COPY . .

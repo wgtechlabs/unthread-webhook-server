@@ -26,9 +26,9 @@ To get started with development:
 
 2. **Install dependencies**
    ```bash
-   pnpm install
+   bun install
    ```
-   > ⚠️ **Important**: This project enforces the use of pnpm. npm and yarn install will be blocked automatically.
+   > ⚠️ **Important**: This project currently uses Bun as the package manager.
 
 3. **Set up environment variables**
    - Copy `.env.example` to `.env`
@@ -52,7 +52,7 @@ To get started with development:
 
 5. **Start the project in development mode**
    ```bash
-   pnpm dev
+   bun run dev
    ```
 
 Please refer to the [README](./README.md) for more detailed setup instructions.
@@ -61,31 +61,31 @@ Please refer to the [README](./README.md) for more detailed setup instructions.
 
 ```bash
 # Development with auto-reload
-pnpm dev
+bun run dev
 
 # Build for production
-pnpm build
+bun run build
 
 # Type checking only
-pnpm type-check
+bun run type-check
 
 # Linting
-pnpm lint              # Run ESLint on all source files
-pnpm lint:fix          # Run ESLint with auto-fix
-pnpm lint:security     # Focus on security-related issues
-pnpm lint:ci           # CI-friendly linting (fails on warnings)
+bun run lint              # Run ESLint on all source files
+bun run lint:fix          # Run ESLint with auto-fix
+bun run lint:security     # Focus on security-related issues
+bun run lint:ci           # CI-friendly linting (fails on warnings)
 
 # Clean build artifacts
-pnpm clean
+bun run clean
 
 # Start production build
-pnpm start
+bun run start
 
 # Run tests
-pnpm test                # Run all tests once
-pnpm test:watch          # Run tests in watch mode
-pnpm test:ui             # Interactive test UI
-pnpm test:coverage       # Generate coverage report
+bun run test                # Run all tests once
+bun run test:watch          # Run tests in watch mode
+bun run test:ui             # Interactive test UI
+bun run test:coverage       # Generate coverage report
 ```
 
 #### 🏛️ Project Structure
@@ -116,7 +116,7 @@ src/
 - **Code Quality**: Follow ESLint rules and security best practices enforced by automated linting
 - **Structured Logging**: Use `@wgtechlabs/log-engine` for all logging with built-in PII protection and security features
 - **Error Handling**: Implement comprehensive error handling with detailed logging
-- **Package Manager**: Use pnpm exclusively (enforced via preinstall script)
+- **Package Manager**: Use Bun for dependency management and project scripts
 - **Code Style**: Follow existing patterns and maintain consistency
 - **Environment**: Use Node.js 22+ for development
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
@@ -138,16 +138,16 @@ This project uses **ESLint** with comprehensive security plugins to maintain cod
 
 ```bash
 # Check for issues
-pnpm lint
+bun run lint
 
 # Automatically fix issues
-pnpm lint:fix
+bun run lint:fix
 
 # Security-focused check
-pnpm lint:security
+bun run lint:security
 
 # CI mode (fails on warnings)
-pnpm lint:ci
+bun run lint:ci
 ```
 
 **Comprehensive ESLint Configuration:**
@@ -174,8 +174,8 @@ For complete configuration details, see [eslint.config.js](./eslint.config.js).
 - **Fix all linting errors** before submitting PRs (required)
 - **Address security warnings** unless there's a documented reason to ignore them
 - **Use ESLint disable comments sparingly** and only with proper justification
-- **Run `pnpm lint:fix`** to auto-fix style issues before committing
-- **Test security rules** with `pnpm lint:security` for security-focused checks
+- **Run `bun run lint:fix`** to auto-fix style issues before committing
+- **Test security rules** with `bun run lint:security` for security-focused checks
 - **VSCode users** get automatic linting and auto-fix on save with ESLint extension
 - **Document any rule disables** in code comments explaining why they're necessary
 
@@ -197,10 +197,10 @@ This project uses [Vitest](https://vitest.dev/) for automated testing. When cont
 
 **Automated Testing:**
 - Write tests for new features and bug fixes
-- Ensure all tests pass: `pnpm test`
-- Maintain minimum 80% code coverage: `pnpm test:coverage`
+- Ensure all tests pass: `bun run test`
+- Maintain minimum 80% code coverage: `bun run test:coverage`
 - Follow co-located test patterns (e.g., `signature.ts` → `signature.test.ts`)
-- Use `pnpm test:watch` for development, `pnpm test:ui` for interactive testing
+- Use `bun run test:watch` for development, `bun run test:ui` for interactive testing
 
 **Manual Testing:**
 - Test your changes using tools like ngrok for webhook testing
@@ -212,15 +212,15 @@ This project uses [Vitest](https://vitest.dev/) for automated testing. When cont
 #### 🔍 Code Review Process
 
 1. **Pre-submission checks**:
-   - [ ] Code builds without errors (`pnpm build`)
-   - [ ] TypeScript type checking passes (`pnpm type-check`)
-   - [ ] Linting passes without errors (`pnpm lint`)
-   - [ ] All tests pass (`pnpm test`)
-   - [ ] Coverage requirements met (`pnpm test:coverage`)
-   - [ ] Development server starts successfully (`pnpm dev`)
+   - [ ] Code builds without errors (`bun run build`)
+   - [ ] TypeScript type checking passes (`bun run type-check`)
+   - [ ] Linting passes without errors (`bun run lint`)
+   - [ ] All tests pass (`bun run test`)
+   - [ ] Coverage requirements met (`bun run test:coverage`)
+   - [ ] Development server starts successfully (`bun run dev`)
    - [ ] Redis integration works properly
    - [ ] Error handling is comprehensive
-   - [ ] No security warnings from `pnpm lint:security`
+   - [ ] No security warnings from `bun run lint:security`
 
 2. **Pull Request Requirements**:
    - [ ] Target the `dev` branch (PRs to `main` will be rejected)

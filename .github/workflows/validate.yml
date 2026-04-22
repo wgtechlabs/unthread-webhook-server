@@ -13,32 +13,31 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
         
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 9.15.4
+          bun-version: 1.3.11
           
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
           node-version: '22'
-          cache: 'pnpm'
           
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: bun install --frozen-lockfile
         
       - name: Type checking
-        run: pnpm type-check
+        run: bun run type-check
         
       - name: Run tests
-        run: pnpm test
+        run: bun run test
         
       - name: Generate coverage
-        run: pnpm test:coverage
+        run: bun run test:coverage
         continue-on-error: true
         
       - name: Build TypeScript
-        run: pnpm build
+        run: bun run build
         
       - name: Test Docker build (no push)
         run: |

@@ -15,7 +15,7 @@ function parseRedisConfig() {
         const parsedPort = Number.parseInt(url.port, 10);
         const config: { host: string; port: number; url: string; password?: string } = {
             host: url.hostname,
-            port: Number.isInteger(parsedPort) && parsedPort > 0 ? parsedPort : 6379,
+            port: Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65535 ? parsedPort : 6379,
             url: redisUrl
         };
         

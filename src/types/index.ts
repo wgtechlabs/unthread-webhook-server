@@ -109,6 +109,8 @@ export interface EnvConfig {
   targetPlatform: string;
   redisUrl: string;
   unthreadWebhookSecret: string;
+  webhookMaxSkewSeconds: number;
+  webhookSkewEnforce: boolean;
 }
 
 // Validation result interface

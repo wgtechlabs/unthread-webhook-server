@@ -36,6 +36,8 @@ export const config = {
     targetPlatform: validateTargetPlatform(targetPlatform), // Always lowercase for canonical format
     redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
     unthreadWebhookSecret: process.env.UNTHREAD_WEBHOOK_SECRET || '',
+    webhookMaxSkewSeconds: Number.parseInt(process.env.WEBHOOK_MAX_SKEW_SECONDS || '300', 10),
+    webhookSkewEnforce: (process.env.WEBHOOK_SKEW_ENFORCE || 'true').toLowerCase() !== 'false',
     unthreadQueueName: 'unthread-events' // Simple hardcoded queue name
 };
 

@@ -12,10 +12,10 @@ function parseRedisConfig() {
     
     try {
         const url = new URL(redisUrl);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const config: any = {
+        const parsedPort = Number.parseInt(url.port, 10);
+        const config: { host: string; port: number; url: string; password?: string } = {
             host: url.hostname,
-            port: parseInt(url.port) || 6379,
+            port: Number.isInteger(parsedPort) && parsedPort > 0 ? parsedPort : 6379,
             url: redisUrl
         };
         

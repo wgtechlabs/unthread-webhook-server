@@ -13,7 +13,7 @@ import { RedisService } from './services/redisService';
 
 // Configure LogEngine with no timestamps (emoji + level + message only)
 LogEngine.configure({ 
-  mode: LogMode.DEBUG,
+  mode: config.nodeEnv === 'production' ? LogMode.INFO : LogMode.DEBUG,
   format: {
     includeIsoTimestamp: false,
     includeLocalTime: false
@@ -22,27 +22,26 @@ LogEngine.configure({
 
 const app = express();
 const port = config.port;
+const healthRedisService = new RedisService();
+const webhookController = WebhookController.initializeBackgroundProcessor();
+const startupRedisService = new RedisService();
+let isShuttingDown = false;
 
 // Configure express to capture raw body for signature verification
 app.use(
   express.json({
-    verify: (req: Request, res: Response, buf: Buffer) => {
+    limit: '256kb',
+    verify: (req: Request, _res: Response, buf: Buffer) => {
       // Add rawBody property for webhook signature verification
       (req as WebhookRequest).rawBody = buf.toString();
     }
   })
 );
 
-const webhookController = new WebhookController();
-
-// Initialize background processor for async webhook processing
-WebhookController.initializeBackgroundProcessor();
-
 // Health check endpoint with Redis and background processor check
 app.get('/health', async (req: Request, res: Response) => {
     try {
-        const redisService = new RedisService();
-        const isConnected = redisService.isConnected();
+        const isConnected = healthRedisService.isConnected();
         const backgroundStatus = WebhookController.getBackgroundProcessorStatus();
         
         if (isConnected && backgroundStatus.initialized) {
@@ -70,6 +69,7 @@ app.get('/health', async (req: Request, res: Response) => {
 });
 
 // Main webhook endpoint with proper middleware chain
+// TODO: add rate limiting
 app.post('/unthread-webhook', 
     verifySignature, 
     ...validateEvent, 
@@ -83,11 +83,10 @@ async function startServer() {
     try {
         LogEngine.log('Starting Unthread webhook server...');
         
-        const redisService = new RedisService();
         LogEngine.log('Attempting to connect to Redis...');
-        await redisService.connect();
+        await startupRedisService.connect();
         
-        app.listen(port, () => {
+        const server = app.listen(port, () => {
             // Production-friendly startup message - always visible
             LogEngine.log(`Unthread webhook server started on port ${port}`);
             
@@ -95,9 +94,43 @@ async function startServer() {
             LogEngine.debug(`Endpoints: /health | /unthread-webhook`);
             LogEngine.debug(`Mode: ${config.nodeEnv} | Platform: ${config.targetPlatform}`);
         });
+
+        const shutdown = (signal: string) => {
+            if (isShuttingDown) {
+                return;
+            }
+            isShuttingDown = true;
+            LogEngine.log(`Received ${signal}, starting graceful shutdown`);
+
+            const forceExit = setTimeout(() => {
+                LogEngine.error('Graceful shutdown timeout reached, forcing exit');
+                // eslint-disable-next-line n/no-process-exit
+                process.exit(0);
+            }, 10000);
+            forceExit.unref();
+
+            server.close(() => {
+                Promise.resolve()
+                    .then(async () => {
+                        webhookController.destroy?.();
+                        await startupRedisService.close();
+                        LogEngine.log('Graceful shutdown completed');
+                        // eslint-disable-next-line n/no-process-exit
+                        process.exit(0);
+                    })
+                    .catch((error) => {
+                        LogEngine.error(`Error during shutdown: ${error}`);
+                        // eslint-disable-next-line n/no-process-exit
+                        process.exit(0);
+                    });
+            });
+        };
+
+        process.on('SIGTERM', () => shutdown('SIGTERM'));
+        process.on('SIGINT', () => shutdown('SIGINT'));
     } catch (error) {
         LogEngine.error(`Failed to start server: ${error}`);
-        console.error('Detailed error:', error);
+        // eslint-disable-next-line n/no-process-exit
         process.exit(1);
     }
 }

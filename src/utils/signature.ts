@@ -29,7 +29,21 @@ export const verifyUnthreadSignature = (req: WebhookRequest, signingSecret: stri
         .update(rawBody)
         .digest('hex');
 
-    return signature === expectedSignature;
+    try {
+        if (!/^[a-fA-F0-9]+$/.test(signature) || signature.length % 2 !== 0) {
+            return false;
+        }
+        const provided = Buffer.from(signature, 'hex');
+        const expected = Buffer.from(expectedSignature, 'hex');
+
+        if (provided.length !== expected.length) {
+            return false;
+        }
+
+        return timingSafeEqual(provided, expected);
+    } catch {
+        return false;
+    }
 };
 
 /**
@@ -40,12 +54,29 @@ export const verifyUnthreadSignature = (req: WebhookRequest, signingSecret: stri
  */
 export const verifyWebhookSignature = (req: Request, secret: string): boolean => {
     const signature = req.headers['x-signature'] as string;
+    if (!signature) {
+        return false;
+    }
     const payload = JSON.stringify(req.body);
     const expectedSignature = createHmac('sha256', secret)
         .update(payload)
         .digest('hex');
 
-    return signature === expectedSignature;
+    try {
+        if (!/^[a-fA-F0-9]+$/.test(signature) || signature.length % 2 !== 0) {
+            return false;
+        }
+        const provided = Buffer.from(signature, 'hex');
+        const expected = Buffer.from(expectedSignature, 'hex');
+
+        if (provided.length !== expected.length) {
+            return false;
+        }
+
+        return timingSafeEqual(provided, expected);
+    } catch {
+        return false;
+    }
 };
 
 /**

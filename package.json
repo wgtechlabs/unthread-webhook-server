@@ -33,17 +33,15 @@
     "lint:fix": "eslint . --ext .ts,.js --fix",
     "lint:security": "eslint . --ext .ts,.js",
     "lint:ci": "eslint . --ext .ts,.js --max-warnings 1",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage --coverage-reporter=text --coverage-reporter=lcov"
   },
   "dependencies": {
     "@wgtechlabs/log-engine": "2.3.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
-    "global": "4.4.0",
     "redis": "^5.12.1"
   },
   "devDependencies": {
@@ -52,8 +50,6 @@
     "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "8.59.0",
     "@typescript-eslint/parser": "8.59.0",
-    "@vitest/coverage-v8": "4.1.5",
-    "@vitest/ui": "4.1.5",
     "axios": "^1.15.1",
     "eslint": "10.2.1",
     "eslint-plugin-import": "2.32.0",
@@ -63,8 +59,7 @@
     "eslint-plugin-security": "4.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3",
-    "vitest": "4.1.5"
+    "typescript": "^6.0.3"
   },
   "overrides": {
     "flatted": "3.4.2",

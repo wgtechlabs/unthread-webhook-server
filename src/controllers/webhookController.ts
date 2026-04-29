@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import { randomUUID } from 'crypto';
 import { LogEngine } from '@wgtechlabs/log-engine';
 import { WebhookService } from '../services/webhookService';
 import { WebhookRequest, WebhookResponse, ErrorResponse, UnthreadWebhookEvent } from '../types';
@@ -14,18 +15,23 @@ export class WebhookController {
     /**
      * Initialize background processor singleton for async event processing
      */
-    static initializeBackgroundProcessor(): void {
+    static initializeBackgroundProcessor(): WebhookController {
         if (!WebhookController.backgroundProcessor) {
             WebhookController.backgroundProcessor = new WebhookController();
             LogEngine.log('Background webhook processor initialized');
         }
+        return WebhookController.backgroundProcessor;
+    }
+
+    static getBackgroundProcessor(): WebhookController | null {
+        return WebhookController.backgroundProcessor;
     }
 
     /**
-     * Handle webhook with immediate response pattern
+     * Handle webhook with at-least-once delivery pattern
      * 1. Validate request quickly
-     * 2. Send immediate 200 response
-     * 3. Queue event for background processing
+     * 2. Await event processing/queueing
+     * 3. Return 200 response after enqueue completes
      */
     async handleWebhook(req: WebhookRequest, res: Response<WebhookResponse | ErrorResponse>): Promise<Response> {
         const startTime = Date.now();
@@ -56,9 +62,10 @@ export class WebhookController {
             }
 
             // Generate request ID for tracking
-            const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            
-            // IMMEDIATE RESPONSE - Send 200 before processing
+            const requestId = `req_${randomUUID()}`;
+
+            await this.webhookService.processEvent(req.body);
+
             const responseTime = Date.now() - startTime;
             const response = res.status(200).json({ 
                 message: 'Event received and queued for processing',
@@ -67,9 +74,6 @@ export class WebhookController {
                 responseTime: `${responseTime}ms`,
                 timestamp: new Date().toISOString()
             });
-
-            // Queue event for background processing (non-blocking)
-            this.queueEventForBackgroundProcessing(req.body, requestId);
             
             LogEngine.debug(`Immediate response sent`, {
                 eventId,
@@ -161,5 +165,9 @@ export class WebhookController {
             initialized: WebhookController.backgroundProcessor !== null,
             timestamp: new Date().toISOString()
         };
+    }
+
+    destroy(): void {
+        this.webhookService.destroy();
     }
 }

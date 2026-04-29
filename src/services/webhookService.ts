@@ -326,20 +326,29 @@ export class WebhookService {
 
     /**
      * Generate a composite fingerprint for retry deduplication.
-     * Format: {eventTimestamp}:{event}:{data.id}
+     * Format: {event}:{data.id} for logical create/delete events.
      * 
      * This catches Unthread retries that assign a new eventId to the same logical event.
      * Returns null if insufficient data to generate a meaningful fingerprint.
      */
     private generateFingerprint(event: UnthreadWebhookEvent): string | null {
-        const eventTimestamp = event.eventTimestamp;
         const eventType = event.event;
         const dataId = event.data?.id;
 
-        if (!eventTimestamp || !eventType || !dataId) {
+        if (!eventType || !dataId) {
             return null;
         }
 
-        return `${eventTimestamp}:${eventType}:${dataId}`;
+        if (eventType === 'conversation_updated') {
+            const changeMarker =
+                event.data?.updatedAt ||
+                event.data?.statusUpdatedAt ||
+                event.data?.status ||
+                event.eventTimestamp;
+
+            return changeMarker ? `${eventType}:${dataId}:${changeMarker}` : null;
+        }
+
+        return `${eventType}:${dataId}`;
     }
 }

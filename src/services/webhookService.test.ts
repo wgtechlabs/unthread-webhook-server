@@ -320,7 +320,7 @@ describe('WebhookService', () => {
     });
 
     describe('Composite Fingerprint Deduplication', () => {
-        it('should generate fingerprint from eventTimestamp, event type, and data.id', () => {
+        it('should generate fingerprint from event type and data.id for message events', () => {
             const event = buildMessageEvent({
                 eventTimestamp: 1772463244428,
                 data: {
@@ -331,10 +331,10 @@ describe('WebhookService', () => {
             });
 
             const fingerprint = (service as any).generateFingerprint(event);
-            expect(fingerprint).toBe('1772463244428:message_created:T08DF0UA02H-C08DWG00P25-1772463242.918629');
+            expect(fingerprint).toBe('message_created:T08DF0UA02H-C08DWG00P25-1772463242.918629');
         });
 
-        it('should generate same fingerprint for retries with different eventIds', () => {
+        it('should generate same fingerprint for retries with different eventIds and timestamps', () => {
             const event1 = buildMessageEvent({
                 eventId: '5fb567d5-7de5-4aab-a89b-37123a315df3',
                 eventTimestamp: 1772463244428,
@@ -347,7 +347,7 @@ describe('WebhookService', () => {
 
             const event2 = buildMessageEvent({
                 eventId: '94a4cbce-0772-4ad8-bd06-d20cc36c1818',
-                eventTimestamp: 1772463244428,
+                eventTimestamp: 1772463244430,
                 data: {
                     id: 'T08DF0UA02H-C08DWG00P25-1772463242.918629',
                     conversationId: 'conv-1',
@@ -409,7 +409,23 @@ describe('WebhookService', () => {
             expect(fingerprint).toBeNull();
         });
 
-        it('should generate fingerprint for conversation events', () => {
+        it('should generate fingerprint for conversation create events', () => {
+            const event: UnthreadWebhookEvent = {
+                event: 'conversation_created',
+                eventId: 'test-conv-create',
+                eventTimestamp: 1772463244428,
+                webhookTimestamp: Date.now(),
+                data: {
+                    id: 'conv-123',
+                    title: 'New Conversation',
+                },
+            };
+
+            const fingerprint = (service as any).generateFingerprint(event);
+            expect(fingerprint).toBe('conversation_created:conv-123');
+        });
+
+        it('should generate fingerprint for conversation update events with update marker', () => {
             const event: UnthreadWebhookEvent = {
                 event: 'conversation_updated',
                 eventId: 'test-conv-update',
@@ -418,11 +434,12 @@ describe('WebhookService', () => {
                 data: {
                     id: 'conv-123',
                     title: 'Updated Conversation',
+                    updatedAt: '2026-04-29T09:32:01.028Z',
                 },
             };
 
             const fingerprint = (service as any).generateFingerprint(event);
-            expect(fingerprint).toBe('1772463244428:conversation_updated:conv-123');
+            expect(fingerprint).toBe('conversation_updated:conv-123:2026-04-29T09:32:01.028Z');
         });
     });
 
@@ -515,7 +532,7 @@ describe('WebhookService', () => {
 
             // Should have claimed fingerprint via SET NX
             expect(redisClient.set).toHaveBeenCalledWith(
-                expect.stringContaining('unthread:fp:1772463244428:message_created:msg-new'),
+                expect.stringContaining('unthread:fp:message_created:msg-new'),
                 'processed',
                 expect.objectContaining({ EX: expect.any(Number), NX: true })
             );

@@ -1,7 +1,15 @@
 import * as crypto from 'crypto';
 import { Request, Response, NextFunction } from 'express';
+import { LogEngine } from '@wgtechlabs/log-engine';
 import { config } from '../config/env';
 import { ErrorResponse, WebhookRequest } from '../types';
+
+const parseHexBuffer = (value: string): Buffer => {
+    if (!/^[a-fA-F0-9]+$/.test(value) || value.length % 2 !== 0) {
+        throw new Error('Invalid hex signature');
+    }
+    return Buffer.from(value, 'hex');
+};
 
 export const verifySignature = (req: Request, res: Response<ErrorResponse>, next: NextFunction): void => {
     // Get the signing secret from validated environment config
@@ -35,13 +43,71 @@ export const verifySignature = (req: Request, res: Response<ErrorResponse>, next
                       .update(rawBody)
                       .digest('hex');
 
-    // Compare signatures
-    if (hmac !== signature) {
+    try {
+        const expectedBuffer = parseHexBuffer(hmac);
+        const providedBuffer = parseHexBuffer(signature);
+
+        if (expectedBuffer.length !== providedBuffer.length) {
+            res.status(403).json({
+                error: 'Invalid signature',
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+
+        if (!crypto.timingSafeEqual(expectedBuffer, providedBuffer)) {
+            res.status(403).json({
+                error: 'Invalid signature',
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+    } catch {
         res.status(403).json({ 
             error: 'Invalid signature',
             timestamp: new Date().toISOString()
         });
         return;
+    }
+
+    const rawWebhookTimestamp = req.body?.webhookTimestamp;
+    const webhookTimestamp = Number(rawWebhookTimestamp);
+    const now = Date.now();
+    const maxSkewMs = config.webhookMaxSkewSeconds * 1000;
+    const hasValidTimestamp = Number.isFinite(webhookTimestamp);
+    const skewMs = hasValidTimestamp ? Math.abs(now - webhookTimestamp) : maxSkewMs + 1000;
+    const skewSeconds = Math.round(skewMs / 1000);
+
+    if (skewMs > maxSkewMs) {
+        if (config.webhookSkewEnforce) {
+            LogEngine.warn('Webhook rejected - stale timestamp', {
+                eventId: req.body?.eventId,
+                skewSeconds,
+                maxSkewSeconds: config.webhookMaxSkewSeconds,
+                enforce: true,
+                webhookTimestamp: rawWebhookTimestamp,
+                serverTime: now
+            });
+            res.status(403).json({
+                error: 'Stale webhook timestamp',
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+        LogEngine.warn('Webhook skew exceeds window (observe-only, not rejected)', {
+            eventId: req.body?.eventId,
+            skewSeconds,
+            maxSkewSeconds: config.webhookMaxSkewSeconds,
+            enforce: false,
+            webhookTimestamp: rawWebhookTimestamp,
+            serverTime: now
+        });
+    } else {
+        LogEngine.debug('Webhook timestamp within skew window', {
+            eventId: req.body?.eventId,
+            skewSeconds,
+            maxSkewSeconds: config.webhookMaxSkewSeconds
+        });
     }
 
     next();

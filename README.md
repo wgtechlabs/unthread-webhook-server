@@ -23,11 +23,11 @@ These outstanding organizations partner with us to support our open-source work:
 
 ## 🚀 Quick Start
 
-**Requirements**: Node.js 22+, Redis, pnpm
+**Requirements**: Node.js 22+, Redis, Bun
 
 ```bash
 # 1. Install dependencies
-pnpm install
+bun install
 
 # 2. Configure environment
 cp .env.example .env
@@ -40,8 +40,8 @@ sudo systemctl start redis-server     # Linux
 docker run -d -p 6379:6379 redis:alpine  # Docker
 
 # 4. Run the server
-pnpm dev        # Development with auto-reload
-pnpm start      # Production mode
+bun run dev     # Development with auto-reload
+bun run start   # Production mode
 ```
 
 Server runs on `http://localhost:3000` with endpoints:
@@ -117,7 +117,7 @@ docker-compose down
 
 ## 🏗️ Development Container
 
-Dev container with Node.js 22.16, pnpm, and essential VS Code extensions (Copilot, ESLint, Docker, GitLens).
+Dev container with Node.js 22.16, Bun, and essential VS Code extensions (Copilot, ESLint, Docker, GitLens).
 
 **Quick Start:** Open in VS Code → Click "Reopen in Container" → Start coding
 
@@ -227,11 +227,11 @@ Events are queued with this enhanced structure:
 ### Build Commands
 
 ```bash
-pnpm clean      # Clean previous builds
-pnpm build      # Build for production
-pnpm type-check # TypeScript type checking only
-pnpm dev        # Development with hot-reload
-pnpm start      # Run production build
+bun run clean       # Clean previous builds
+bun run build       # Build for production
+bun run type-check  # TypeScript type checking only
+bun run dev         # Development with hot-reload
+bun run start       # Run production build
 ```
 
 ### Code Quality & Linting
@@ -239,10 +239,10 @@ pnpm start      # Run production build
 This project enforces strict code quality and security standards using ESLint with comprehensive security plugins.
 
 ```bash
-pnpm lint              # Run ESLint on all source files
-pnpm lint:fix          # Run ESLint with auto-fix
-pnpm lint:security     # Focus on security-related issues
-pnpm lint:ci           # CI-friendly linting (fails on warnings)
+bun run lint              # Run ESLint on all source files
+bun run lint:fix          # Run ESLint with auto-fix
+bun run lint:security     # Focus on security-related issues
+bun run lint:ci           # CI-friendly linting (fails on warnings)
 ```
 
 **Security Plugins Enabled:**
@@ -280,22 +280,19 @@ src/
 
 ## 🧪 Testing
 
-This project uses [Vitest](https://vitest.dev/) for fast, modern testing with first-class TypeScript support.
+This project uses [Bun's built-in test runner](https://bun.com/docs/cli/test) (`bun:test`) for fast, modern testing with first-class TypeScript support.
 
 ### Running Tests
 
 ```bash
 # Run all tests (one-time)
-pnpm test
+bun run test
 
 # Run tests in watch mode (development)
-pnpm test:watch
-
-# Run tests with interactive UI
-pnpm test:ui
+bun run test:watch
 
 # Generate coverage report
-pnpm test:coverage
+bun run test:coverage
 ```
 
 ### Writing Tests

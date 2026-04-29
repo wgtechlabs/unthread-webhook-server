@@ -21,8 +21,6 @@
   "[javascript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
-  "vitest.enable": true,
-  "vitest.commandLine": "pnpm test:watch",
   "python-envs.defaultEnvManager": "ms-python.python:system",
   "python-envs.pythonProjects": []
 }

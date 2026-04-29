@@ -61,9 +61,8 @@ export class FileAttachmentCorrelationUtil {
    * Check if event has file attachments
    */
   hasFileAttachments(event: UnthreadWebhookEvent): boolean {
-    return event.data?.files && 
-           Array.isArray(event.data.files) && 
-           event.data.files.length > 0;
+    const files = event.data?.files;
+    return Array.isArray(files) && files.length > 0;
   }
 
   /**

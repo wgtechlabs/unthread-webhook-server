@@ -29,6 +29,10 @@ function validateTargetPlatform(platform: string | undefined): string {
 }
 
 const targetPlatform = process.env.TARGET_PLATFORM;
+const parsedWebhookMaxSkewSeconds = Number.parseInt(process.env.WEBHOOK_MAX_SKEW_SECONDS || '300', 10);
+const webhookMaxSkewSeconds = Number.isFinite(parsedWebhookMaxSkewSeconds) && parsedWebhookMaxSkewSeconds > 0
+    ? parsedWebhookMaxSkewSeconds
+    : 300;
 
 export const config = {
     nodeEnv: process.env.NODE_ENV || 'development',
@@ -36,6 +40,8 @@ export const config = {
     targetPlatform: validateTargetPlatform(targetPlatform), // Always lowercase for canonical format
     redisUrl: process.env.REDIS_URL || 'redis://localhost:6379',
     unthreadWebhookSecret: process.env.UNTHREAD_WEBHOOK_SECRET || '',
+    webhookMaxSkewSeconds,
+    webhookSkewEnforce: (process.env.WEBHOOK_SKEW_ENFORCE || 'true').toLowerCase() !== 'false',
     unthreadQueueName: 'unthread-events' // Simple hardcoded queue name
 };
 

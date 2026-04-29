@@ -12,10 +12,10 @@ function parseRedisConfig() {
     
     try {
         const url = new URL(redisUrl);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const config: any = {
+        const parsedPort = Number.parseInt(url.port, 10);
+        const config: { host: string; port: number; url: string; password?: string } = {
             host: url.hostname,
-            port: parseInt(url.port) || 6379,
+            port: Number.isInteger(parsedPort) && parsedPort > 0 && parsedPort <= 65535 ? parsedPort : 6379,
             url: redisUrl
         };
         
@@ -25,7 +25,10 @@ function parseRedisConfig() {
         
         return config;
     } catch (error) {
-        throw new Error(`Invalid REDIS_URL format: ${(error as Error).message}. Expected format: redis://username:password@host:port`);
+        throw new Error(
+            `Invalid REDIS_URL format: ${(error as Error).message}. Expected format: redis://username:password@host:port`,
+            { cause: error }
+        );
     }
 }
 

@@ -15,10 +15,10 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build and Push Production Container
-        uses: wgtechlabs/container-build-flow-action@v1.3.1
+        uses: wgtechlabs/container-build-flow-action@v1.7.1
         with:
           # Registry Configuration
           registry: both

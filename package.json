@@ -50,6 +50,8 @@
     "@types/node": "^25.6.0",
     "@typescript-eslint/eslint-plugin": "8.59.0",
     "@typescript-eslint/parser": "8.59.0",
+    "@vitest/coverage-v8": "4.1.5",
+    "@vitest/ui": "4.1.5",
     "axios": "^1.15.1",
     "eslint": "10.2.1",
     "eslint-plugin-import": "2.32.0",
@@ -59,7 +61,8 @@
     "eslint-plugin-security": "4.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "4.1.5"
   },
   "overrides": {
     "flatted": "3.4.2",

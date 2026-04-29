@@ -83,6 +83,10 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 COPY . .
 RUN bun run build
 
+# Create a production-only package.json (strip devDependencies so Docker Scout
+# does not flag transitive dev-only packages like picomatch@^2.x from nodemon)
+RUN node -e "const p=require('./package.json');delete p.devDependencies;process.stdout.write(JSON.stringify(p,null,2));" > /tmp/package-prod.json
+
 # =============================================================================
 # STAGE 4: Final Runtime Image
 # =============================================================================
@@ -97,8 +101,9 @@ ENV NODE_ENV=production \
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 -G nodejs
 
-# Copy package.json for package manager commands
-COPY --chown=nodejs:nodejs package.json .
+# Copy production-only package.json (no devDependencies) to avoid Docker Scout
+# false-positives from dev dep chains that reference picomatch@^2.x
+COPY --from=build --chown=nodejs:nodejs /tmp/package-prod.json ./package.json
 
 # Copy production dependencies and built application
 COPY --from=deps --chown=nodejs:nodejs /usr/src/app/node_modules ./node_modules

@@ -68,7 +68,7 @@ describe('WebhookService', () => {
   });
 
   it('generateFingerprint returns composite fingerprint and null when data id missing', () => {
-    expect((service as any).generateFingerprint(buildEvent())).toBe('1772463244428:message_created:msg-1');
+    expect((service as any).generateFingerprint(buildEvent())).toBe('message_created:msg-1');
     expect((service as any).generateFingerprint(buildEvent({ data: { conversationId: 'conv-1' } }))).toBeNull();
   });
 

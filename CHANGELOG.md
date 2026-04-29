@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.2] - 2026-04-29
+
+### Changed
+
+- override release-platforms to amd64 to eliminate QEMU arm64 stalls (#65)
+
 ## [1.1.1] - 2026-04-29
 
 ### Changed

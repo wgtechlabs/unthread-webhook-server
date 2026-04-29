@@ -15,13 +15,19 @@ const runMiddleware = async (body: Record<string, unknown>) => {
       };
     }
   } as any;
+
+  const validationChains = validateEvent.slice(0, -1);
+  const handleValidationErrors = validateEvent[validateEvent.length - 1];
+
+  for (const validationChain of validationChains) {
+    await (validationChain as any).run(req);
+  }
+
   const next = mock(() => {
     state.nextCalled = true;
   });
 
-  for (const mw of validateEvent) {
-    await Promise.resolve(mw(req, res, next));
-  }
+  await Promise.resolve(handleValidationErrors(req, res, next));
 
   return state;
 };

@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.1] - 2026-04-29
+
+### Changed
+
+- consolidate webhook, ci, and dependency maintenance changes (#64)
+- build(deps): bump vite in the npm_and_yarn group across 1 directory (#52)
+- add dependabot for npm, actions, and docker
+
 ## [1.1.0] - 2026-03-03
 
 ### Added

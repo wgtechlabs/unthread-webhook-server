@@ -84,7 +84,6 @@ bun run start
 # Run tests
 bun run test                # Run all tests once
 bun run test:watch          # Run tests in watch mode
-bun run test:ui             # Interactive test UI
 bun run test:coverage       # Generate coverage report
 ```
 
@@ -193,14 +192,14 @@ const data: any = response;
 
 #### 🧪 Testing Guidelines
 
-This project uses [Vitest](https://vitest.dev/) for automated testing. When contributing:
+This project uses [Bun's built-in test runner](https://bun.com/docs/cli/test) (`bun:test`) for automated testing. When contributing:
 
 **Automated Testing:**
 - Write tests for new features and bug fixes
 - Ensure all tests pass: `bun run test`
 - Maintain minimum 80% code coverage: `bun run test:coverage`
 - Follow co-located test patterns (e.g., `signature.ts` → `signature.test.ts`)
-- Use `bun run test:watch` for development, `bun run test:ui` for interactive testing
+- Use `bun run test:watch` for development
 
 **Manual Testing:**
 - Test your changes using tools like ngrok for webhook testing

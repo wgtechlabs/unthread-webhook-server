@@ -280,7 +280,7 @@ src/
 
 ## 🧪 Testing
 
-This project uses [Vitest](https://vitest.dev/) for fast, modern testing with first-class TypeScript support.
+This project uses [Bun's built-in test runner](https://bun.com/docs/cli/test) (`bun:test`) for fast, modern testing with first-class TypeScript support.
 
 ### Running Tests
 
@@ -290,9 +290,6 @@ bun run test
 
 # Run tests in watch mode (development)
 bun run test:watch
-
-# Run tests with interactive UI
-bun run test:ui
 
 # Generate coverage report
 bun run test:coverage

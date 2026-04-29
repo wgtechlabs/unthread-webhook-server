@@ -2,36 +2,52 @@ import { Response } from 'express';
 import { randomUUID } from 'crypto';
 import { LogEngine } from '@wgtechlabs/log-engine';
 import { WebhookService } from '../services/webhookService';
-import { WebhookRequest, WebhookResponse, ErrorResponse, UnthreadWebhookEvent } from '../types';
+import { WebhookRequest, WebhookResponse, ErrorResponse } from '../types';
 
 export class WebhookController {
     private webhookService: WebhookService;
-    private static backgroundProcessor: WebhookController | null = null;
+    private static sharedProcessor: WebhookController | null = null;
 
     constructor() {
         this.webhookService = new WebhookService();
     }
 
     /**
-     * Initialize background processor singleton for async event processing
+     * Initialize the shared webhook processor singleton.
+     *
+     * Historically this controller queued events for asynchronous background
+     * processing. That pattern was removed because it caused the same logical
+     * event to be enqueued multiple times in Redis when Unthread retried with
+     * a new eventId before the in-flight async work finished. The controller
+     * now processes events inline (see {@link handleWebhook}); this singleton
+     * exists to share a single WebhookService (and its Redis client) across
+     * requests and to allow graceful shutdown via {@link destroy}.
+     *
+     * The legacy method/property names are kept for backwards compatibility
+     * with `app.ts` and existing tests.
      */
     static initializeBackgroundProcessor(): WebhookController {
-        if (!WebhookController.backgroundProcessor) {
-            WebhookController.backgroundProcessor = new WebhookController();
-            LogEngine.log('Background webhook processor initialized');
+        if (!WebhookController.sharedProcessor) {
+            WebhookController.sharedProcessor = new WebhookController();
+            LogEngine.log('Shared webhook processor initialized');
         }
-        return WebhookController.backgroundProcessor;
+        return WebhookController.sharedProcessor;
     }
 
     static getBackgroundProcessor(): WebhookController | null {
-        return WebhookController.backgroundProcessor;
+        return WebhookController.sharedProcessor;
     }
 
     /**
-     * Handle webhook with at-least-once delivery pattern
-     * 1. Validate request quickly
-     * 2. Await event processing/queueing
-     * 3. Return 200 response after enqueue completes
+     * Handle a webhook request.
+     *
+     * Processing is performed inline: the request is validated, then
+     * {@link WebhookService.processEvent} is awaited (signature/skew checks
+     * happen earlier in the auth middleware). Only after the event has been
+     * fully processed (and, when appropriate, enqueued in Redis) do we
+     * respond with 200. This intentionally couples request latency to the
+     * Redis enqueue so that Unthread retries do not race against in-flight
+     * background work and produce duplicate queue entries.
      */
     async handleWebhook(req: WebhookRequest, res: Response<WebhookResponse | ErrorResponse>): Promise<Response> {
         const startTime = Date.now();
@@ -68,14 +84,14 @@ export class WebhookController {
 
             const responseTime = Date.now() - startTime;
             const response = res.status(200).json({ 
-                message: 'Event received and queued for processing',
+                message: 'Event processed',
                 eventId,
                 requestId,
                 responseTime: `${responseTime}ms`,
                 timestamp: new Date().toISOString()
             });
             
-            LogEngine.debug(`Immediate response sent`, {
+            LogEngine.debug(`Webhook response sent after inline processing`, {
                 eventId,
                 requestId,
                 responseTime: `${responseTime}ms`
@@ -95,74 +111,11 @@ export class WebhookController {
     }
 
     /**
-     * Queue event for background processing (non-blocking)
-     */
-    private queueEventForBackgroundProcessing(event: UnthreadWebhookEvent, requestId: string): void {
-        // Use setImmediate to ensure this runs after response is sent
-        setImmediate(() => {
-            void (async () => {
-                try {
-                    if (WebhookController.backgroundProcessor) {
-                        await WebhookController.backgroundProcessor.processEventInBackground(event, requestId);
-                    } else {
-                        // Safe fallback: process with current instance instead of dropping
-                        LogEngine.warn('Background processor not initialized, processing with current instance');
-                        await this.processEventInBackground(event, requestId);
-                    }
-                } catch (error) {
-                    LogEngine.error(`Background processing failed:`, {
-                        requestId,
-                        eventId: event?.eventId,
-                        error: error instanceof Error ? error.message : 'Unknown error'
-                    });
-                }
-            })();
-        });
-    }
-
-    /**
-     * Process event in background (this is where the heavy lifting happens)
-     */
-    private async processEventInBackground(event: UnthreadWebhookEvent, requestId: string): Promise<void> {
-        const startTime = Date.now();
-        
-        try {
-            LogEngine.debug(`Background processing started`, {
-                eventId: event?.eventId,
-                requestId
-            });
-
-            // This is where the original processing logic runs
-            // (file correlation, Redis operations, etc.)
-            await this.webhookService.processEvent(event);
-            
-            const processingTime = Date.now() - startTime;
-            LogEngine.info(`Background processing completed`, {
-                eventId: event?.eventId,
-                requestId,
-                processingTime: `${processingTime}ms`
-            });
-            
-        } catch (error) {
-            const processingTime = Date.now() - startTime;
-            LogEngine.error(`Background processing failed:`, {
-                eventId: event?.eventId,
-                requestId,
-                processingTime: `${processingTime}ms`,
-                error: error instanceof Error ? error.message : 'Unknown error'
-            });
-            
-            // Note: We don't throw here since the webhook response was already sent
-            // Consider implementing retry logic or dead letter queue here
-        }
-    }
-
-    /**
-     * Get background processor health status
+     * Get shared webhook processor health status.
      */
     static getBackgroundProcessorStatus(): { initialized: boolean; timestamp: string } {
         return {
-            initialized: WebhookController.backgroundProcessor !== null,
+            initialized: WebhookController.sharedProcessor !== null,
             timestamp: new Date().toISOString()
         };
     }

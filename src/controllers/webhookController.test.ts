@@ -59,7 +59,7 @@ describe('WebhookController', () => {
     await controller.handleWebhook({ body: event } as any, res as any);
     expect(webhookService.processEvent).toHaveBeenCalledWith(event);
     expect(state.status).toBe(200);
-    expect(state.body.message).toBe('Event received and queued for processing');
+    expect(state.body.message).toBe('Event processed');
     expect(String(state.body.requestId)).toMatch(/^req_/);
   });
 

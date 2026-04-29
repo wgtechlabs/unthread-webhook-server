@@ -35,8 +35,7 @@
     "lint:ci": "eslint . --ext .ts,.js --max-warnings 1",
     "test": "bun test",
     "test:watch": "bun test --watch",
-    "test:coverage": "bun test --coverage --coverage-reporter=text --coverage-reporter=lcov",
-    "test:vitest": "vitest run"
+    "test:coverage": "bun test --coverage --coverage-reporter=text --coverage-reporter=lcov"
   },
   "dependencies": {
     "@wgtechlabs/log-engine": "2.3.1",

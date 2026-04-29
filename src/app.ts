@@ -105,7 +105,7 @@ async function startServer() {
             const forceExit = setTimeout(() => {
                 LogEngine.error('Graceful shutdown timeout reached, forcing exit');
                 // eslint-disable-next-line n/no-process-exit
-                process.exit(0);
+                process.exit(1);
             }, 10000);
             forceExit.unref();
 
@@ -121,7 +121,7 @@ async function startServer() {
                     .catch((error) => {
                         LogEngine.error(`Error during shutdown: ${error}`);
                         // eslint-disable-next-line n/no-process-exit
-                        process.exit(0);
+                        process.exit(1);
                     });
             });
         };

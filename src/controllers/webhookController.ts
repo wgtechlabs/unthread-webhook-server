@@ -28,10 +28,10 @@ export class WebhookController {
     }
 
     /**
-     * Handle webhook with immediate response pattern
+     * Handle webhook with at-least-once delivery pattern
      * 1. Validate request quickly
-     * 2. Send immediate 200 response
-     * 3. Queue event for background processing
+     * 2. Await event processing/queueing
+     * 3. Return 200 response after enqueue completes
      */
     async handleWebhook(req: WebhookRequest, res: Response<WebhookResponse | ErrorResponse>): Promise<Response> {
         const startTime = Date.now();

@@ -25,7 +25,10 @@ function parseRedisConfig() {
         
         return config;
     } catch (error) {
-        throw new Error(`Invalid REDIS_URL format: ${(error as Error).message}. Expected format: redis://username:password@host:port`);
+        throw new Error(
+            `Invalid REDIS_URL format: ${(error as Error).message}. Expected format: redis://username:password@host:port`,
+            { cause: error }
+        );
     }
 }
 

@@ -21,13 +21,16 @@
 # Use Node.js 22.22 LTS Alpine with security patches
 ARG NODE_VERSION=22.22-alpine3.23
 
+# Bun version used in build stages (must match packageManager in package.json)
+ARG BUN_VERSION=1.3.13
+
 # Get Railway service ID for cache mounts
 ARG RAILWAY_SERVICE_ID
 
 # =============================================================================
 # STAGE 1: Base Image
 # =============================================================================
-# Alpine Linux 3.21 base for minimal image size with latest security updates
+# Alpine Linux 3.23 base for minimal image size with latest security updates
 FROM node:${NODE_VERSION} AS base
 
 # Install security updates for Alpine packages
@@ -45,9 +48,11 @@ WORKDIR /usr/src/app
 # image, keeping the production image smaller and reducing attack surface.
 FROM base AS bun-base
 
+# Re-declare ARG so the global value is accessible in this stage
+ARG BUN_VERSION
+
 # Install Bun for dependency management
-# Note: Version must match packageManager field in package.json (currently 1.3.13)
-RUN npm install --global bun@1.3.13
+RUN npm install --global bun@${BUN_VERSION}
 
 # =============================================================================
 # STAGE 2: Production Dependencies

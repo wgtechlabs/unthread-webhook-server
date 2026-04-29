@@ -18,8 +18,8 @@
 
 # syntax=docker/dockerfile:1
 
-# Use Node.js 22.21 LTS Alpine with security patches
-ARG NODE_VERSION=22.21-alpine3.23
+# Use Node.js 22.22 LTS Alpine with security patches
+ARG NODE_VERSION=22.22-alpine3.23
 
 # Get Railway service ID for cache mounts
 ARG RAILWAY_SERVICE_ID
@@ -46,8 +46,8 @@ WORKDIR /usr/src/app
 FROM base AS bun-base
 
 # Install Bun for dependency management
-# Note: Version must match packageManager field in package.json (currently 1.3.11)
-RUN npm install --global bun@1.3.11
+# Note: Version must match packageManager field in package.json (currently 1.3.13)
+RUN npm install --global bun@1.3.13
 
 # =============================================================================
 # STAGE 2: Production Dependencies

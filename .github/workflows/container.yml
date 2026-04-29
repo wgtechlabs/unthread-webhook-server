@@ -38,7 +38,7 @@ jobs:
 
           # Build Arguments
           build-args: |
-            NODE_VERSION=22.21-alpine3.23
+            NODE_VERSION=22.22-alpine3.23
             RAILWAY_SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID }}
 
           # Labels

@@ -65,6 +65,7 @@ export class WebhookService {
             const claimed = await this.redisService.claimFingerprint(fingerprint);
             if (!claimed) {
                 LogEngine.info(`Event already processed - fingerprint duplicate detected: ${event.eventId} (fp: ${fingerprint})`);
+                await this.redisService.markEventProcessed(event.eventId);
                 return;
             }
         }

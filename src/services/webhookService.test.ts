@@ -441,6 +441,54 @@ describe('WebhookService', () => {
             const fingerprint = (service as any).generateFingerprint(event);
             expect(fingerprint).toBe('conversation_updated:conv-123:2026-04-29T09:32:01.028Z');
         });
+
+        it('should generate the same fingerprint for retried conversation update events', () => {
+            const originalEvent: UnthreadWebhookEvent = {
+                event: 'conversation_updated',
+                eventId: 'test-conv-update-original',
+                eventTimestamp: 1772463244428,
+                webhookTimestamp: 1772463244428,
+                data: {
+                    id: 'conv-123',
+                    title: 'Updated Conversation',
+                    updatedAt: '2026-04-29T09:32:01.028Z',
+                },
+            };
+
+            const retryEvent: UnthreadWebhookEvent = {
+                event: 'conversation_updated',
+                eventId: 'test-conv-update-retry',
+                eventTimestamp: 1772463249999,
+                webhookTimestamp: 1772463250000,
+                data: {
+                    id: 'conv-123',
+                    title: 'Updated Conversation',
+                    updatedAt: '2026-04-29T09:32:01.028Z',
+                },
+            };
+
+            const originalFingerprint = (service as any).generateFingerprint(originalEvent);
+            const retryFingerprint = (service as any).generateFingerprint(retryEvent);
+
+            expect(originalFingerprint).toBe('conversation_updated:conv-123:2026-04-29T09:32:01.028Z');
+            expect(retryFingerprint).toBe(originalFingerprint);
+        });
+
+        it('should return null for conversation_updated when no stable update marker is available', () => {
+            const event: UnthreadWebhookEvent = {
+                event: 'conversation_updated',
+                eventId: 'test-conv-update-no-marker',
+                eventTimestamp: 1772463244428,
+                webhookTimestamp: 1772463244428,
+                data: {
+                    id: 'conv-123',
+                    title: 'Updated Conversation',
+                },
+            };
+
+            const fingerprint = (service as any).generateFingerprint(event);
+            expect(fingerprint).toBeNull();
+        });
     });
 
     describe('processEvent Integration - Dedup Flow', () => {

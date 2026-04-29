@@ -326,8 +326,12 @@ export class WebhookService {
 
     /**
      * Generate a composite fingerprint for retry deduplication.
-     * Format: {event}:{data.id} for logical create/delete events.
-     * 
+     * Format: `{event}:{data.id}` for logical create/delete events.
+     * Format: `{event}:{data.id}:{changeMarker}` for conversation_updated events,
+     *         where changeMarker is derived from stable update fields (updatedAt,
+     *         statusUpdatedAt, or status). Returns null when no stable marker is
+     *         available to avoid letting volatile retries bypass deduplication.
+     *
      * This catches Unthread retries that assign a new eventId to the same logical event.
      * Returns null if insufficient data to generate a meaningful fingerprint.
      */
@@ -343,8 +347,7 @@ export class WebhookService {
             const changeMarker =
                 event.data?.updatedAt ||
                 event.data?.statusUpdatedAt ||
-                event.data?.status ||
-                event.eventTimestamp;
+                event.data?.status;
 
             return changeMarker ? `${eventType}:${dataId}:${changeMarker}` : null;
         }

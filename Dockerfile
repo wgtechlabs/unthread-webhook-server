@@ -18,8 +18,11 @@
 
 # syntax=docker/dockerfile:1
 
-# Use Node.js 22.21 LTS Alpine with security patches
-ARG NODE_VERSION=22.21-alpine3.23
+# Use Node.js 22.22 LTS Alpine with security patches
+ARG NODE_VERSION=22.22-alpine3.23
+
+# Bun version used in build stages (must match packageManager in package.json)
+ARG BUN_VERSION=1.3.13
 
 # Get Railway service ID for cache mounts
 ARG RAILWAY_SERVICE_ID
@@ -27,7 +30,7 @@ ARG RAILWAY_SERVICE_ID
 # =============================================================================
 # STAGE 1: Base Image
 # =============================================================================
-# Alpine Linux 3.21 base for minimal image size with latest security updates
+# Alpine Linux 3.23 base for minimal image size with latest security updates
 FROM node:${NODE_VERSION} AS base
 
 # Install security updates for Alpine packages
@@ -45,9 +48,11 @@ WORKDIR /usr/src/app
 # image, keeping the production image smaller and reducing attack surface.
 FROM base AS bun-base
 
+# Re-declare ARG so the global value is accessible in this stage
+ARG BUN_VERSION
+
 # Install Bun for dependency management
-# Note: Version must match packageManager field in package.json (currently 1.3.11)
-RUN npm install --global bun@1.3.11
+RUN npm install --global bun@${BUN_VERSION}
 
 # =============================================================================
 # STAGE 2: Production Dependencies
@@ -78,6 +83,10 @@ RUN --mount=type=bind,source=package.json,target=package.json \
 COPY . .
 RUN bun run build
 
+# Create a production-only package.json (strip devDependencies so Docker Scout
+# does not flag transitive dev-only packages like picomatch@^2.x from nodemon)
+RUN node -e "const p=require('./package.json');delete p.devDependencies;process.stdout.write(JSON.stringify(p,null,2));" > /tmp/package-prod.json
+
 # =============================================================================
 # STAGE 4: Final Runtime Image
 # =============================================================================
@@ -92,8 +101,9 @@ ENV NODE_ENV=production \
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 -G nodejs
 
-# Copy package.json for package manager commands
-COPY --chown=nodejs:nodejs package.json .
+# Copy production-only package.json (no devDependencies) to avoid Docker Scout
+# false-positives from dev dep chains that reference picomatch@^2.x
+COPY --from=build --chown=nodejs:nodejs /tmp/package-prod.json ./package.json
 
 # Copy production dependencies and built application
 COPY --from=deps --chown=nodejs:nodejs /usr/src/app/node_modules ./node_modules

@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.3] - 2026-05-03
+
+### Security
+
+- fix Docker Scout vulnerabilities by updating Node.js, Bun, and picomatch (#67)
+
 ## [1.1.2] - 2026-04-29
 
 ### Changed

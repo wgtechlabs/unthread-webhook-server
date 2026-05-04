@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, mock } from 'bun:test';
-import { FileAttachmentCorrelationUtil } from './fileAttachmentCorrelation';
 import { UnthreadWebhookEvent } from '../types';
+import { FileAttachmentCorrelationUtil } from './fileAttachmentCorrelation';
 
 mock.module('@wgtechlabs/log-engine', () => ({
   LogEngine: {
@@ -8,11 +8,13 @@ mock.module('@wgtechlabs/log-engine', () => ({
     debug: mock(() => undefined),
     warn: mock(() => undefined),
     error: mock(() => undefined),
-    log: mock(() => undefined)
-  }
+    log: mock(() => undefined),
+  },
 }));
 
-const makeEvent = (overrides: Partial<UnthreadWebhookEvent> = {}): UnthreadWebhookEvent => ({
+const makeEvent = (
+  overrides: Partial<UnthreadWebhookEvent> = {},
+): UnthreadWebhookEvent => ({
   event: 'message_created',
   eventId: 'evt-1',
   eventTimestamp: Date.now(),
@@ -22,9 +24,9 @@ const makeEvent = (overrides: Partial<UnthreadWebhookEvent> = {}): UnthreadWebho
     conversationId: 'conv-1',
     threadTs: 't1',
     channelId: 'c1',
-    teamId: 'tm1'
+    teamId: 'tm1',
   },
-  ...overrides
+  ...overrides,
 });
 
 describe('FileAttachmentCorrelationUtil', () => {
@@ -40,8 +42,14 @@ describe('FileAttachmentCorrelationUtil', () => {
   it('generateCorrelationKey handles empty, partial, and full data', () => {
     const util = new FileAttachmentCorrelationUtil();
     instances.push(util);
-    expect(util.generateCorrelationKey(makeEvent({ data: undefined })).length).toBe(0);
-    expect(util.generateCorrelationKey(makeEvent({ data: { conversationId: 'only-one' } })).length).toBe(0);
+    expect(
+      util.generateCorrelationKey(makeEvent({ data: undefined })).length,
+    ).toBe(0);
+    expect(
+      util.generateCorrelationKey(
+        makeEvent({ data: { conversationId: 'only-one' } }),
+      ).length,
+    ).toBe(0);
     expect(util.generateCorrelationKey(makeEvent())).toBe('conv-1-t1-c1-tm1');
   });
 
@@ -49,13 +57,15 @@ describe('FileAttachmentCorrelationUtil', () => {
     const util = new FileAttachmentCorrelationUtil();
     instances.push(util);
     util.cacheMessageEvent(makeEvent({ eventId: 'msg-source' }), 'whatsapp');
-    const correlated = util.correlateFileEvent(makeEvent({
-      eventId: 'file-1',
-      data: {
-        ...makeEvent().data,
-        files: [{ name: 'a.txt' }]
-      }
-    }));
+    const correlated = util.correlateFileEvent(
+      makeEvent({
+        eventId: 'file-1',
+        data: {
+          ...makeEvent().data,
+          files: [{ name: 'a.txt' }],
+        },
+      }),
+    );
     expect(correlated).toBe('whatsapp');
   });
 
@@ -67,16 +77,21 @@ describe('FileAttachmentCorrelationUtil', () => {
     const callback = mock(async () => undefined);
     util.onBufferedEventReady = callback;
 
-    const result = util.correlateFileEvent(makeEvent({
-      eventId: 'file-timeout',
-      data: {
-        ...makeEvent().data,
-        files: [{ name: 'b.txt' }]
-      }
-    }));
+    const result = util.correlateFileEvent(
+      makeEvent({
+        eventId: 'file-timeout',
+        data: {
+          ...makeEvent().data,
+          files: [{ name: 'b.txt' }],
+        },
+      }),
+    );
     expect(result).toBe('buffered');
 
     await new Promise((resolve) => setTimeout(resolve, 30));
-    expect(callback).toHaveBeenCalledWith(expect.objectContaining({ eventId: 'file-timeout' }), 'unknown');
+    expect(callback).toHaveBeenCalledWith(
+      expect.objectContaining({ eventId: 'file-timeout' }),
+      'unknown',
+    );
   });
 });

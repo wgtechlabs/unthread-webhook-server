@@ -1,0 +1,12 @@
+# Gitleaks configuration
+# https://github.com/gitleaks/gitleaks#configuration
+
+title = "Gitleaks - Unthread Webhook Server"
+
+[allowlist]
+description = "Known false positives"
+paths = [
+  # Example env files contain placeholder values, not real secrets
+  '''.env.example''',
+  '''.env.railway''',
+]

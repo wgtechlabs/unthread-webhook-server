@@ -1,356 +1,405 @@
 import { LogEngine } from '@wgtechlabs/log-engine';
-import { RedisService } from './redisService';
 import { config } from '../config/env';
-import { FileAttachmentCorrelationUtil } from '../utils/fileAttachmentCorrelation';
-import { 
-    UnthreadWebhookEvent, 
-    RedisQueueMessage, 
-    UnthreadEventType, 
-    ValidationResult, 
-    PlatformSource,
-    AttachmentMetadata
+import {
+  AttachmentMetadata,
+  PlatformSource,
+  RedisQueueMessage,
+  UnthreadEventType,
+  UnthreadWebhookEvent,
+  ValidationResult,
 } from '../types';
+import { FileAttachmentCorrelationUtil } from '../utils/fileAttachmentCorrelation';
+import { RedisService } from './redisService';
 
 export class WebhookService {
-    private redisService: RedisService;
-    private fileAttachmentCorrelation: FileAttachmentCorrelationUtil;
+  private redisService: RedisService;
+  private fileAttachmentCorrelation: FileAttachmentCorrelationUtil;
 
-    constructor() {
-        this.redisService = new RedisService();
-        this.fileAttachmentCorrelation = new FileAttachmentCorrelationUtil();
-        
-        // Set up callback for processing buffered file events
-        this.fileAttachmentCorrelation.onBufferedEventReady = async (event, sourcePlatform) => {
-            try {
-                await this.continueEventProcessing(event, sourcePlatform);
-            } catch (error) {
-                LogEngine.error('Failed to process buffered file attachment event in callback', {
-                    eventId: event.eventId,
-                    sourcePlatform,
-                    error: error instanceof Error ? error.message : 'Unknown error'
-                });
-            }
-        };
-    }
+  constructor() {
+    this.redisService = new RedisService();
+    this.fileAttachmentCorrelation = new FileAttachmentCorrelationUtil();
 
-    private async initializeServices(): Promise<void> {
-        if (!this.redisService.isConnected()) {
-            await this.redisService.connect();
-        }
-    }
-
-    async processEvent(event: UnthreadWebhookEvent): Promise<void> {
-        const startTime = Date.now();
-        
-        if (!this.validateEvent(event).isValid) {
-            throw new Error('Invalid event structure');
-        }
-
-        await this.initializeServices();
-
-        // Check for duplicate events by eventId (exact retry)
-        const eventExists = await this.redisService.eventExists(event.eventId);
-        if (eventExists) {
-            LogEngine.info(`Event already processed - duplicate detected: ${event.eventId}`);
-            return;
-        }
-
-        // Atomically claim fingerprint slot (retry with new eventId detection)
-        // Uses SET NX to combine check+mark into a single atomic operation
-        const fingerprint = this.generateFingerprint(event);
-        if (!fingerprint && event.event !== 'url_verification') {
-            LogEngine.warn(`No fingerprint generated for event ${event.eventId} — falling back to eventId-only dedup`);
-        }
-        if (fingerprint) {
-            const claimed = await this.redisService.claimFingerprint(fingerprint);
-            if (!claimed) {
-                LogEngine.info(`Event already processed - fingerprint duplicate detected: ${event.eventId} (fp: ${fingerprint})`);
-                await this.redisService.markEventProcessed(event.eventId);
-                return;
-            }
-        }
-
-        // Detect platform source (enhanced with file attachment correlation)
-        const sourcePlatform = this.detectPlatformSource(event);
-        
-        // Handle buffered events - they will be processed later via callback
-        if (sourcePlatform === 'buffered') {
-            // Mark buffered events as processed to prevent duplicate buffering on retries
-            // Note: fingerprint already claimed atomically above via SET NX
-            await this.redisService.markEventProcessed(event.eventId);
-            
-            const processingTime = Date.now() - startTime;
-            LogEngine.info('File attachment event buffered for correlation', {
-                eventId: event.eventId,
-                fingerprint,
-                hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event),
-                processingTime: `${processingTime}ms`
-            });
-            return; // Event will be processed later when correlation is available
-        }
-        
-        // Continue with normal processing
+    // Set up callback for processing buffered file events
+    this.fileAttachmentCorrelation.onBufferedEventReady = async (
+      event,
+      sourcePlatform,
+    ) => {
+      try {
         await this.continueEventProcessing(event, sourcePlatform);
-        
-        const totalProcessingTime = Date.now() - startTime;
-        LogEngine.debug(`Event processing completed`, {
+      } catch (error) {
+        LogEngine.error(
+          'Failed to process buffered file attachment event in callback',
+          {
             eventId: event.eventId,
-            fingerprint,
             sourcePlatform,
-            totalProcessingTime: `${totalProcessingTime}ms`
-        });
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+        );
+      }
+    };
+  }
+
+  private async initializeServices(): Promise<void> {
+    if (!this.redisService.isConnected()) {
+      await this.redisService.connect();
+    }
+  }
+
+  async processEvent(event: UnthreadWebhookEvent): Promise<void> {
+    const startTime = Date.now();
+
+    const validationResult = this.validateEvent(event);
+    if (!validationResult.isValid) {
+      const details = validationResult.errors?.join(', ') ?? 'unknown errors';
+      throw new Error(`Invalid event structure: ${details}`);
     }
 
-    private transformEvent(unthreadEvent: UnthreadWebhookEvent, sourcePlatform: PlatformSource): RedisQueueMessage {
-        const targetPlatform = config.targetPlatform;
-        const attachmentMetadata = this.generateAttachmentMetadata(unthreadEvent);
-        
-        const fingerprint = this.generateFingerprint(unthreadEvent);
+    await this.initializeServices();
 
-        const message: RedisQueueMessage = {
-            platform: "unthread",
-            targetPlatform,
-            type: unthreadEvent.event,
-            sourcePlatform,
-            data: {
-                ...unthreadEvent.data,
-                originalEvent: unthreadEvent.event,
-                eventId: unthreadEvent.eventId,
-                eventTimestamp: unthreadEvent.eventTimestamp,
-                webhookTimestamp: unthreadEvent.webhookTimestamp,
-                ...(fingerprint && { fingerprint })
-            },
-            timestamp: Date.now()
-        };
-
-        // Add attachment metadata if files are present
-        if (attachmentMetadata.hasFiles) {
-            message.attachments = attachmentMetadata;
-        }
-
-        return message;
+    // Check for duplicate events by eventId (exact retry)
+    const eventExists = await this.redisService.eventExists(event.eventId);
+    if (eventExists) {
+      LogEngine.info(
+        `Event already processed - duplicate detected: ${event.eventId}`,
+      );
+      return;
     }
 
-    /**
-     * Generate rich attachment metadata for easier integration
-     * 
-     * GUARANTEE: If hasFiles is true, data.files array exists with fileCount items
-     * GUARANTEE: If hasFiles is false, data.files is empty/missing or attachments field is omitted
-     */
-    private generateAttachmentMetadata(event: UnthreadWebhookEvent): AttachmentMetadata {
-        const files = event.data?.files;
-        
-        // Strict validation: must be a non-empty array
-        if (!files || !Array.isArray(files) || files.length === 0) {
-            return {
-                hasFiles: false,
-                fileCount: 0,
-                totalSize: 0,
-                types: [],
-                names: []
-            };
-        }
-
-        const fileCount = files.length;
-        const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
-        const types = files.map(file => file.mimetype || file.filetype || 'unknown').filter(Boolean);
-        const names = files.map(file => file.name || file.title || 'unnamed').filter(Boolean);
-
-        // GUARANTEE: If this returns hasFiles: true, data.files exists with fileCount items
-        return {
-            hasFiles: true,
-            fileCount,
-            totalSize,
-            types: [...new Set(types)], // Remove duplicates
-            names
-        };
+    // Atomically claim fingerprint slot (retry with new eventId detection)
+    // Uses SET NX to combine check+mark into a single atomic operation
+    const fingerprint = this.generateFingerprint(event);
+    if (!fingerprint && event.event !== 'url_verification') {
+      LogEngine.warn(
+        `No fingerprint generated for event ${event.eventId} — falling back to eventId-only dedup`,
+      );
+    }
+    if (fingerprint) {
+      const claimed = await this.redisService.claimFingerprint(fingerprint);
+      if (!claimed) {
+        LogEngine.info(
+          `Event already processed - fingerprint duplicate detected: ${event.eventId} (fp: ${fingerprint})`,
+        );
+        await this.redisService.markEventProcessed(event.eventId);
+        return;
+      }
     }
 
-    /**
-     * Enhanced platform source detection with file attachment correlation
-     * - If conversation_updated → 'dashboard' (always administrative actions)
-     * - If from dashboard → 'dashboard'
-     * - If file attachment with unknown source → attempt correlation or buffer
-     * - If unknown → 'unknown' 
-     * - Otherwise → use the actual target platform value from environment variable
-     */
-    private detectPlatformSource(event: UnthreadWebhookEvent): PlatformSource {
-        // Conversation updates are always administrative actions from dashboard
-        if (event.event === 'conversation_updated') {
-            LogEngine.debug(`Platform detected via event type: dashboard (${event.eventId}) - conversation updates are administrative actions`);
-            return 'dashboard';
-        }
+    // Detect platform source (enhanced with file attachment correlation)
+    const sourcePlatform = this.detectPlatformSource(event);
 
-        if (event.event !== 'message_created' || !event.data) {
-            return 'unknown';
-        }
-
-        // Extract platform source using existing logic
-        const detectedPlatform = this.extractBasicPlatformSource(event);
-        
-        // Enhanced logic for file attachment correlation
-        const hasFileAttachments = this.fileAttachmentCorrelation.hasFileAttachments(event);
-        const isSourceConfirmed = this.fileAttachmentCorrelation.isSourcePlatformConfirmed(detectedPlatform);
-        
-        if (hasFileAttachments && !isSourceConfirmed) {
-            // This is a file attachment event with unknown source - try correlation
-            LogEngine.debug(`File attachment detected with unknown source, attempting correlation (${event.eventId})`);
-            return this.fileAttachmentCorrelation.correlateFileEvent(event);
-        }
-        
-        if (isSourceConfirmed && !hasFileAttachments) {
-            // This is a message event with confirmed source - cache for correlation
-            LogEngine.debug(`Message event with confirmed source, caching for correlation (${event.eventId})`);
-            this.fileAttachmentCorrelation.cacheMessageEvent(event, detectedPlatform);
-        }
-        
-        return detectedPlatform;
+    // Handle buffered events - they will be processed later via callback
+    if (sourcePlatform === 'buffered') {
+      const processingTime = Date.now() - startTime;
+      LogEngine.info('File attachment event buffered for correlation', {
+        eventId: event.eventId,
+        fingerprint,
+        hasFiles: this.fileAttachmentCorrelation.hasFileAttachments(event),
+        processingTime: `${processingTime}ms`,
+      });
+      return; // Event will be processed later when correlation is available
     }
 
-    /**
-     * Extract basic platform source using existing detection logic
-     * This is the original detectPlatformSource logic extracted for reuse
-     */
-    private extractBasicPlatformSource(event: UnthreadWebhookEvent): PlatformSource {
-        // PRIMARY DETECTION: conversationUpdates field analysis (100% reliable)
-        const hasConversationUpdates = event.data?.metadata?.event_payload?.conversationUpdates !== undefined;
-        
-        if (hasConversationUpdates) {
-            LogEngine.debug(`Platform detected via conversationUpdates: dashboard (${event.eventId})`);
-            return 'dashboard';
+    // Continue with normal processing
+    await this.continueEventProcessing(event, sourcePlatform);
+
+    const totalProcessingTime = Date.now() - startTime;
+    LogEngine.debug(`Event processing completed`, {
+      eventId: event.eventId,
+      fingerprint,
+      sourcePlatform,
+      totalProcessingTime: `${totalProcessingTime}ms`,
+    });
+  }
+
+  private transformEvent(
+    unthreadEvent: UnthreadWebhookEvent,
+    sourcePlatform: PlatformSource,
+  ): RedisQueueMessage {
+    const targetPlatform = config.targetPlatform;
+    const attachmentMetadata = this.generateAttachmentMetadata(unthreadEvent);
+
+    const fingerprint = this.generateFingerprint(unthreadEvent);
+
+    const message: RedisQueueMessage = {
+      platform: 'unthread',
+      targetPlatform,
+      type: unthreadEvent.event,
+      sourcePlatform,
+      data: {
+        ...unthreadEvent.data,
+        originalEvent: unthreadEvent.event,
+        eventId: unthreadEvent.eventId,
+        eventTimestamp: unthreadEvent.eventTimestamp,
+        webhookTimestamp: unthreadEvent.webhookTimestamp,
+        ...(fingerprint && { fingerprint }),
+      },
+      timestamp: Date.now(),
+    };
+
+    // Add attachment metadata if files are present
+    if (attachmentMetadata.hasFiles) {
+      message.attachments = attachmentMetadata;
+    }
+
+    return message;
+  }
+
+  /**
+   * Generate rich attachment metadata for easier integration
+   *
+   * GUARANTEE: If hasFiles is true, data.files array exists with fileCount items
+   * GUARANTEE: If hasFiles is false, data.files is empty/missing or attachments field is omitted
+   */
+  private generateAttachmentMetadata(
+    event: UnthreadWebhookEvent,
+  ): AttachmentMetadata {
+    const files = event.data?.files;
+
+    // Strict validation: must be a non-empty array
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return {
+        hasFiles: false,
+        fileCount: 0,
+        totalSize: 0,
+        types: [],
+        names: [],
+      };
+    }
+
+    const fileCount = files.length;
+    const totalSize = files.reduce((sum, file) => sum + (file.size || 0), 0);
+    const types = files
+      .map((file) => file.mimetype || file.filetype || 'unknown')
+      .filter(Boolean);
+    const names = files
+      .map((file) => file.name || file.title || 'unnamed')
+      .filter(Boolean);
+
+    // GUARANTEE: If this returns hasFiles: true, data.files exists with fileCount items
+    return {
+      hasFiles: true,
+      fileCount,
+      totalSize,
+      types: [...new Set(types)], // Remove duplicates
+      names,
+    };
+  }
+
+  /**
+   * Enhanced platform source detection with file attachment correlation
+   * - If conversation_updated → 'dashboard' (always administrative actions)
+   * - If from dashboard → 'dashboard'
+   * - If file attachment with unknown source → attempt correlation or buffer
+   * - If unknown → 'unknown'
+   * - Otherwise → use the actual target platform value from environment variable
+   */
+  private detectPlatformSource(event: UnthreadWebhookEvent): PlatformSource {
+    // Conversation updates are always administrative actions from dashboard
+    if (event.event === 'conversation_updated') {
+      LogEngine.debug(
+        `Platform detected via event type: dashboard (${event.eventId}) - conversation updates are administrative actions`,
+      );
+      return 'dashboard';
+    }
+
+    if (event.event !== 'message_created' || !event.data) {
+      return 'unknown';
+    }
+
+    // Extract platform source using existing logic
+    const detectedPlatform = this.extractBasicPlatformSource(event);
+
+    // Enhanced logic for file attachment correlation
+    const hasFileAttachments =
+      this.fileAttachmentCorrelation.hasFileAttachments(event);
+    const isSourceConfirmed =
+      this.fileAttachmentCorrelation.isSourcePlatformConfirmed(
+        detectedPlatform,
+      );
+
+    if (hasFileAttachments && !isSourceConfirmed) {
+      // This is a file attachment event with unknown source - try correlation
+      LogEngine.debug(
+        `File attachment detected with unknown source, attempting correlation (${event.eventId})`,
+      );
+      return this.fileAttachmentCorrelation.correlateFileEvent(event);
+    }
+
+    if (isSourceConfirmed && !hasFileAttachments) {
+      // This is a message event with confirmed source - cache for correlation
+      LogEngine.debug(
+        `Message event with confirmed source, caching for correlation (${event.eventId})`,
+      );
+      this.fileAttachmentCorrelation.cacheMessageEvent(event, detectedPlatform);
+    }
+
+    return detectedPlatform;
+  }
+
+  /**
+   * Extract basic platform source using existing detection logic
+   * This is the original detectPlatformSource logic extracted for reuse
+   */
+  private extractBasicPlatformSource(
+    event: UnthreadWebhookEvent,
+  ): PlatformSource {
+    // PRIMARY DETECTION: conversationUpdates field analysis (100% reliable)
+    const hasConversationUpdates =
+      event.data?.metadata?.event_payload?.conversationUpdates !== undefined;
+
+    if (hasConversationUpdates) {
+      LogEngine.debug(
+        `Platform detected via conversationUpdates: dashboard (${event.eventId})`,
+      );
+      return 'dashboard';
+    } else {
+      // Check if metadata exists but conversationUpdates is missing
+      if (event.data?.metadata?.event_payload && !hasConversationUpdates) {
+        LogEngine.debug(
+          `Platform detected via missing conversationUpdates: ${config.targetPlatform} (${event.eventId})`,
+        );
+        return config.targetPlatform;
+      }
+    }
+
+    // SECONDARY DETECTION: botName pattern matching (fallback)
+    // Supports multiple platform patterns:
+    //   - @username format (e.g., Discord bots)
+    //   - Phone number format (e.g., WhatsApp via Twilio: +1234567890)
+    if (event.data?.botName) {
+      const botName = event.data.botName;
+      if (typeof botName === 'string') {
+        const isAtMention = botName.startsWith('@');
+        const isPhoneNumber = /^\+?\d[\d\s\-()]{6,}$/.test(botName.trim());
+
+        if (isAtMention || isPhoneNumber) {
+          const pattern = isAtMention ? '@mention' : 'phone number';
+          LogEngine.debug(
+            `Platform detected via botName ${pattern} pattern: ${config.targetPlatform} (${event.eventId})`,
+          );
+          return config.targetPlatform;
         } else {
-            // Check if metadata exists but conversationUpdates is missing
-            if (event.data?.metadata?.event_payload && !hasConversationUpdates) {
-                LogEngine.debug(`Platform detected via missing conversationUpdates: ${config.targetPlatform} (${event.eventId})`);
-                return config.targetPlatform;
-            }
+          LogEngine.debug(
+            `Platform detected via botName pattern: dashboard (${event.eventId})`,
+          );
+          return 'dashboard';
         }
-
-        // SECONDARY DETECTION: botName pattern matching (fallback)
-        // Supports multiple platform patterns:
-        //   - @username format (e.g., Discord bots)
-        //   - Phone number format (e.g., WhatsApp via Twilio: +1234567890)
-        if (event.data?.botName) {
-            const botName = event.data.botName;
-            if (typeof botName === 'string') {
-                const isAtMention = botName.startsWith('@');
-                const isPhoneNumber = /^\+?\d[\d\s\-()]{6,}$/.test(botName.trim());
-
-                if (isAtMention || isPhoneNumber) {
-                    const pattern = isAtMention ? '@mention' : 'phone number';
-                    LogEngine.debug(`Platform detected via botName ${pattern} pattern: ${config.targetPlatform} (${event.eventId})`);
-                    return config.targetPlatform;
-                } else {
-                    LogEngine.debug(`Platform detected via botName pattern: dashboard (${event.eventId})`);
-                    return 'dashboard';
-                }
-            }
-        }
-
-        // FALLBACK: Unknown if no reliable indicators found
-        LogEngine.warn(`Unable to detect platform source for event ${event.eventId} - insufficient indicators`);
-        return 'unknown';
+      }
     }
 
-    validateEvent(event: UnthreadWebhookEvent): ValidationResult {
-        const requiredFields: (keyof UnthreadWebhookEvent)[] = ['event', 'eventId', 'eventTimestamp', 'webhookTimestamp'];
-        const errors: string[] = [];
-        
-        // Check if all required fields are present
-        for (const field of requiredFields) {
-            // eslint-disable-next-line security/detect-object-injection
-            if (!event[field]) {
-                const error = `Missing required field: ${field}`;
-                LogEngine.error(error);
-                errors.push(error);
-            }
-        }
-        
-        // Validate supported event types
-        const supportedEvents: UnthreadEventType[] = [
-            'url_verification',
-            'conversation_created',
-            'conversation_updated', 
-            'conversation_deleted',
-            'message_created'
-        ];
-        
-        if (!supportedEvents.includes(event.event)) {
-            const error = `Unsupported event type: ${event.event}`;
-            LogEngine.error(error);
-            errors.push(error);
-        }
-        
-        return {
-            isValid: errors.length === 0,
-            errors: errors.length > 0 ? errors : undefined
-        };
+    // FALLBACK: Unknown if no reliable indicators found
+    LogEngine.warn(
+      `Unable to detect platform source for event ${event.eventId} - insufficient indicators`,
+    );
+    return 'unknown';
+  }
+
+  validateEvent(event: UnthreadWebhookEvent): ValidationResult {
+    const requiredFields: (keyof UnthreadWebhookEvent)[] = [
+      'event',
+      'eventId',
+      'eventTimestamp',
+      'webhookTimestamp',
+    ];
+    const errors: string[] = [];
+
+    // Check if all required fields are present
+    for (const field of requiredFields) {
+      // eslint-disable-next-line security/detect-object-injection
+      if (!event[field]) {
+        const error = `Missing required field: ${field}`;
+        LogEngine.error(error);
+        errors.push(error);
+      }
     }
 
-    /**
-     * Continue processing a buffered file event with the correlated source platform
-     * This method is called by the correlation utility when a buffered event is ready
-     */
-    private async continueEventProcessing(event: UnthreadWebhookEvent, sourcePlatform: string): Promise<void> {
-        try {
-            LogEngine.info('Processing buffered file attachment event', {
-                eventId: event.eventId,
-                sourcePlatform,
-                correlationSuccess: sourcePlatform !== 'unknown'
-            });
+    // Validate supported event types
+    const supportedEvents: UnthreadEventType[] = [
+      'url_verification',
+      'conversation_created',
+      'conversation_updated',
+      'conversation_deleted',
+      'message_created',
+    ];
 
-            // Transform and queue the event with the correlated source platform
-            const transformedEvent = this.transformEvent(event, sourcePlatform);
-            await this.redisService.publishEvent(transformedEvent);
-            
-            // Mark eventId as processed
-            await this.redisService.markEventProcessed(event.eventId);
-            
-        } catch (error) {
-            LogEngine.error('Failed to process buffered file attachment event', {
-                eventId: event.eventId,
-                sourcePlatform,
-                error: error instanceof Error ? error.message : 'Unknown error'
-            });
-            throw error;
-        }
+    if (!supportedEvents.includes(event.event)) {
+      const error = `Unsupported event type: ${event.event}`;
+      LogEngine.error(error);
+      errors.push(error);
     }
 
-    /**
-     * Clean up resources when service is destroyed
-     */
-    destroy(): void {
-        this.fileAttachmentCorrelation.destroy();
+    return {
+      isValid: errors.length === 0,
+      errors: errors.length > 0 ? errors : undefined,
+    };
+  }
+
+  /**
+   * Continue processing a buffered file event with the correlated source platform
+   * This method is called by the correlation utility when a buffered event is ready
+   */
+  private async continueEventProcessing(
+    event: UnthreadWebhookEvent,
+    sourcePlatform: PlatformSource,
+  ): Promise<void> {
+    try {
+      LogEngine.info('Processing buffered file attachment event', {
+        eventId: event.eventId,
+        sourcePlatform,
+        correlationSuccess: sourcePlatform !== 'unknown',
+      });
+
+      // Transform and queue the event with the correlated source platform
+      const transformedEvent = this.transformEvent(event, sourcePlatform);
+      await this.redisService.publishEvent(transformedEvent);
+
+      // Mark eventId as processed
+      await this.redisService.markEventProcessed(event.eventId);
+    } catch (error) {
+      LogEngine.error('Failed to process buffered file attachment event', {
+        eventId: event.eventId,
+        sourcePlatform,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Clean up resources when service is destroyed
+   */
+  destroy(): void {
+    this.fileAttachmentCorrelation.destroy();
+  }
+
+  /**
+   * Generate a composite fingerprint for retry deduplication.
+   * Format: `{event}:{data.id}` for logical create/delete events.
+   * Format: `{event}:{data.id}:{changeMarker}` for conversation_updated events,
+   *         where changeMarker is derived from stable update fields (updatedAt,
+   *         statusUpdatedAt, or status). Returns null when no stable marker is
+   *         available to avoid letting volatile retries bypass deduplication.
+   *
+   * This catches Unthread retries that assign a new eventId to the same logical event.
+   * Returns null if insufficient data to generate a meaningful fingerprint.
+   */
+  private generateFingerprint(event: UnthreadWebhookEvent): string | null {
+    const eventType = event.event;
+    const dataId = event.data?.id;
+
+    if (!eventType || !dataId) {
+      return null;
     }
 
-    /**
-     * Generate a composite fingerprint for retry deduplication.
-     * Format: `{event}:{data.id}` for logical create/delete events.
-     * Format: `{event}:{data.id}:{changeMarker}` for conversation_updated events,
-     *         where changeMarker is derived from stable update fields (updatedAt,
-     *         statusUpdatedAt, or status). Returns null when no stable marker is
-     *         available to avoid letting volatile retries bypass deduplication.
-     *
-     * This catches Unthread retries that assign a new eventId to the same logical event.
-     * Returns null if insufficient data to generate a meaningful fingerprint.
-     */
-    private generateFingerprint(event: UnthreadWebhookEvent): string | null {
-        const eventType = event.event;
-        const dataId = event.data?.id;
+    if (eventType === 'conversation_updated') {
+      const changeMarker =
+        event.data?.updatedAt ||
+        event.data?.statusUpdatedAt ||
+        event.data?.status;
 
-        if (!eventType || !dataId) {
-            return null;
-        }
-
-        if (eventType === 'conversation_updated') {
-            const changeMarker =
-                event.data?.updatedAt ||
-                event.data?.statusUpdatedAt ||
-                event.data?.status;
-
-            return changeMarker ? `${eventType}:${dataId}:${changeMarker}` : null;
-        }
-
-        return `${eventType}:${dataId}`;
+      return changeMarker ? `${eventType}:${dataId}:${changeMarker}` : null;
     }
+
+    return `${eventType}:${dataId}`;
+  }
 }

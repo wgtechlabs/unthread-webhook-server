@@ -3,13 +3,26 @@ name: Release
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
+  ci:
+    name: CI Gate
+    uses: ./.github/workflows/ci.yml
+    permissions:
+      contents: read
+
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    needs: ci
     permissions:
       contents: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -17,10 +30,18 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Verify GH_PAT is set
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          if [ -z "$GH_PAT" ]; then
+            echo "::error::GH_PAT secret is required."
+            exit 1
+          fi
+
       - name: Create Release
         id: release
         uses: wgtechlabs/release-build-flow-action@v1.7.0
         with:
-          # Use PAT so the release event triggers downstream workflows
-          # (e.g., container build flow)
           github-token: ${{ secrets.GH_PAT }}
+          commit-convention: clean-commit

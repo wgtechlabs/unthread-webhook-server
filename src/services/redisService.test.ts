@@ -23,7 +23,7 @@ describe('RedisService', () => {
       exists: mock(async () => 0),
       set: mock(async () => 'OK'),
       setEx: mock(async () => 'OK'),
-      quit: mock(async () => undefined)
+      quit: mock(async () => undefined),
     };
     (service as any).client = fakeClient;
   });
@@ -44,7 +44,11 @@ describe('RedisService', () => {
 
   it('markEventProcessed delegates to setEx', async () => {
     await service.markEventProcessed('evt-3');
-    expect(fakeClient.setEx).toHaveBeenCalledWith('unthread:eventid:evt-3', 259200, 'processed');
+    expect(fakeClient.setEx).toHaveBeenCalledWith(
+      'unthread:eventid:evt-3',
+      259200,
+      'processed',
+    );
   });
 
   it('publishEvent pushes serialized message to redis list', async () => {
@@ -56,9 +60,9 @@ describe('RedisService', () => {
         originalEvent: 'message_created',
         eventId: 'evt-4',
         eventTimestamp: Date.now(),
-        webhookTimestamp: Date.now()
+        webhookTimestamp: Date.now(),
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     });
     expect(result).toBe(1);
     expect(fakeClient.lPush).toHaveBeenCalled();

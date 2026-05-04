@@ -18,8 +18,8 @@ const event: UnthreadWebhookEvent = {
   webhookTimestamp: Date.now(),
   data: {
     id: 'msg-1',
-    conversationId: 'conv-1'
-  }
+    conversationId: 'conv-1',
+  },
 };
 
 const createRes = () => {
@@ -33,10 +33,10 @@ const createRes = () => {
           json(payload: any) {
             state.body = payload;
             return payload;
-          }
+          },
         };
-      }
-    }
+      },
+    },
   };
 };
 
@@ -49,7 +49,7 @@ describe('WebhookController', () => {
     webhookService = {
       validateEvent: mock(() => ({ isValid: true })),
       processEvent: mock(async () => undefined),
-      destroy: mock(() => undefined)
+      destroy: mock(() => undefined),
     };
     (controller as any).webhookService = webhookService;
   });
@@ -64,7 +64,10 @@ describe('WebhookController', () => {
   });
 
   it('returns 400 on validation failure', async () => {
-    webhookService.validateEvent = mock(() => ({ isValid: false, errors: ['Missing required field: eventId'] }));
+    webhookService.validateEvent = mock(() => ({
+      isValid: false,
+      errors: ['Missing required field: eventId'],
+    }));
     const { state, res } = createRes();
     await controller.handleWebhook({ body: event } as any, res as any);
     expect(state.status).toBe(400);
@@ -73,7 +76,10 @@ describe('WebhookController', () => {
 
   it('returns 200 for url_verification without processing', async () => {
     const { state, res } = createRes();
-    await controller.handleWebhook({ body: { ...event, event: 'url_verification' } } as any, res as any);
+    await controller.handleWebhook(
+      { body: { ...event, event: 'url_verification' } } as any,
+      res as any,
+    );
     expect(state.status).toBe(200);
     expect(state.body.message).toBe('URL verified');
     expect(webhookService.processEvent).not.toHaveBeenCalled();
@@ -98,6 +104,8 @@ describe('WebhookController', () => {
     const instance = WebhookController.initializeBackgroundProcessor();
     expect(instance).toBeDefined();
     expect(WebhookController.getBackgroundProcessor()).toBe(instance);
-    expect(WebhookController.getBackgroundProcessorStatus().initialized).toBe(true);
+    expect(WebhookController.getBackgroundProcessorStatus().initialized).toBe(
+      true,
+    );
   });
 });

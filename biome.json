@@ -6,10 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!!**/dist"
-    ]
+    "includes": ["**", "!!**/dist"]
   },
   "formatter": {
     "enabled": true,
@@ -106,10 +103,7 @@
   },
   "overrides": [
     {
-      "includes": [
-        "**/*.ts",
-        "**/*.js"
-      ],
+      "includes": ["**/*.ts", "**/*.js"],
       "linter": {
         "rules": {
           "complexity": {
@@ -148,9 +142,7 @@
       }
     },
     {
-      "includes": [
-        "**/*.js"
-      ],
+      "includes": ["**/*.js"],
       "linter": {
         "rules": {
           "style": {
@@ -160,10 +152,7 @@
       }
     },
     {
-      "includes": [
-        "*.config.js",
-        ".*.js"
-      ],
+      "includes": ["*.config.js", ".*.js"],
       "linter": {
         "rules": {
           "style": {

@@ -149,6 +149,7 @@ src/
 - **Environment**: Use Node.js 22+ for development
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
 - **Webhook Integration**: Ensure compatibility with [`wgtechlabs/unthread-telegram-bot`](https://github.com/wgtechlabs/unthread-telegram-bot)
+- **Architecture**: Remember this server is **one per platform**. Each instance has a single `TARGET_PLATFORM` (discord, telegram, whatsapp, etc.) and routes events to that platform's Redis queue. Do not add multi-platform routing logic to a single server instance.
 
 #### 🔍 Code Quality and Linting
 

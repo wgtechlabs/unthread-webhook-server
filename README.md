@@ -15,10 +15,12 @@ A reliable, production-ready Node.js server for processing Unthread.io webhooks 
 These outstanding organizations partner with us to support our open-source work:
 
 <!-- markdownlint-disable MD033 -->
-| <div align="center">💎 Platinum Sponsor</div> |
-|:-------------------------------------------:|
+
+|                                                                         <div align="center">💎 Platinum Sponsor</div>                                                                          |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: |
 | <a href="https://unthread.com"><img src="https://raw.githubusercontent.com/wgtechlabs/unthread-discord-bot/main/.github/assets/sponsors/platinum_unthread.png" width="250" alt="Unthread"></a> |
-| <div align="center"><a href="https://unthread.com" target="_blank"><b>Unthread</b></a><br/>Streamlined support ticketing for modern teams.</div> |
+|                        <div align="center"><a href="https://unthread.com" target="_blank"><b>Unthread</b></a><br/>Streamlined support ticketing for modern teams.</div>                        |
+
 <!-- markdownlint-enable MD033 -->
 
 ## 🚀 Quick Start
@@ -79,6 +81,39 @@ Server runs on `http://localhost:3000` with endpoints:
 - **Security-First Linting**: ESLint with comprehensive security plugins (security, no-secrets, promise handling)
 - **Code Quality**: Automated code quality checks with TypeScript-ESLint integration
 
+## 🎯 Deployment Model: One Server Per Platform
+
+This webhook server is designed to handle **one target platform per instance**. Each server instance processes Unthread webhooks and routes events to a single platform's queue:
+
+- **Discord Integration**: Deploy with `TARGET_PLATFORM=discord`
+- **Telegram Integration**: Deploy with `TARGET_PLATFORM=telegram`
+- **WhatsApp Integration**: Deploy with `TARGET_PLATFORM=whatsapp`
+- **Other Platforms**: Deploy separate instance with `TARGET_PLATFORM=<platform>`
+
+**Why one server per platform?**
+
+- Simplifies configuration and deployment
+- Isolates platform-specific logic and queue handling
+- Prevents cross-platform event routing errors
+- Enables independent scaling per platform
+- Makes monitoring and debugging clearer
+
+**Example Multi-Platform Setup:**
+
+```text
+Unthread Webhooks
+        ↓
+    ┌───┴────────────────────────┐
+    ↓                            ↓
+Server 1                     Server 2
+TARGET_PLATFORM=discord      TARGET_PLATFORM=telegram
+    ↓                            ↓
+Redis Queue                  Redis Queue
+unthread-discord             unthread-telegram
+    ↓                            ↓
+Discord Bot                  Telegram Bot
+```
+
 ## 🚂 One-Click Deploy
 
 Deploy instantly to Railway with a single click:
@@ -133,13 +168,13 @@ cp .env.example .env
 
 Required variables:
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `UNTHREAD_WEBHOOK_SECRET` | Your Unthread.io signing secret | - | ✅ |
-| `NODE_ENV` | Environment mode | `development` | ❌ |
-| `PORT` | Server port | `3000` | ❌ |
-| `TARGET_PLATFORM` | Platform identifier (e.g., telegram, discord) | - | ✅ |
-| `REDIS_URL` | Redis connection URL | `redis://localhost:6379` | ❌ |
+| Variable                  | Description                                   | Default                  | Required |
+| ------------------------- | --------------------------------------------- | ------------------------ | -------- |
+| `UNTHREAD_WEBHOOK_SECRET` | Your Unthread.io signing secret               | -                        | ✅       |
+| `NODE_ENV`                | Environment mode                              | `development`            | ❌       |
+| `PORT`                    | Server port                                   | `3000`                   | ❌       |
+| `TARGET_PLATFORM`         | Platform identifier (e.g., telegram, discord) | -                        | ✅       |
+| `REDIS_URL`               | Redis connection URL                          | `redis://localhost:6379` | ❌       |
 
 ### Getting Your Unthread Signing Secret
 
@@ -175,7 +210,7 @@ This server features advanced file attachment correlation that:
 
 - `url_verification` - Automatic URL verification
 - `conversation_created` - New conversations
-- `conversation_updated` - Status changes  
+- `conversation_updated` - Status changes
 - `conversation_deleted` - Conversation removal
 - `message_created` - New messages
 
@@ -187,7 +222,7 @@ Events are queued with this enhanced structure:
 {
   "platform": "unthread",
   "targetPlatform": "telegram",
-  "type": "message_created", 
+  "type": "message_created",
   "sourcePlatform": "dashboard",
   "data": {
     "eventId": "evt_123456789",
@@ -217,7 +252,7 @@ Events are queued with this enhanced structure:
 **New Enhancement**: Events with file attachments now include an `attachments` metadata object providing:
 
 - `hasFiles`: Boolean indicating presence of files
-- `fileCount`: Total number of attached files  
+- `fileCount`: Total number of attached files
 - `totalSize`: Combined size of all files in bytes
 - `types`: Array of unique MIME types (deduplicated)
 - `names`: Array of all file names (maintains order)
@@ -335,7 +370,7 @@ curl http://localhost:3000/health
 
 ```json
 {
-  "status": "ERROR", 
+  "status": "ERROR",
   "redis": "disconnected",
   "timestamp": "2025-06-21T12:00:00.000Z"
 }

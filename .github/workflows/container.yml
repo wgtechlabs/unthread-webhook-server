@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: Container-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -24,10 +24,18 @@ jobs:
       security-events: write
       actions: read
 
+  codeql:
+    name: CodeQL Gate
+    uses: ./.github/workflows/codeql.yml
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
   build:
     name: Build Container Images
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [ ci, codeql ]
     permissions:
       contents: read
       packages: write

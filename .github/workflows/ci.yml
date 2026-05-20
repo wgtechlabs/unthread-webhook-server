@@ -10,10 +10,14 @@ concurrency:
 
 jobs:
   validate:
-    name: Lint Test Validate
+    name: Lint Test Validate (Node.js ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24, 26]
 
     steps:
       - name: Checkout code
@@ -35,7 +39,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: ${{ matrix.node-version }}
 
       - name: Cache Bun dependencies
         uses: actions/cache@v4

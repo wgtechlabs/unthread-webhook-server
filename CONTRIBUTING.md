@@ -146,7 +146,7 @@ src/
 - **Error Handling**: Implement comprehensive error handling with detailed logging
 - **Package Manager**: Use Bun for dependency management and project scripts
 - **Code Style**: Follow existing patterns and maintain consistency
-- **Environment**: Use Node.js 22+ for development
+- **Environment**: Use Node.js 26 as default runtime (Node.js 22, 24, and 26 are supported)
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
 - **Webhook Integration**: Ensure compatibility with [`wgtechlabs/unthread-telegram-bot`](https://github.com/wgtechlabs/unthread-telegram-bot)
 - **Architecture**: Remember this server is **one per platform**. Each instance has a single `TARGET_PLATFORM` (discord, telegram, whatsapp, etc.) and routes events to that platform's Redis queue. Do not add multi-platform routing logic to a single server instance.

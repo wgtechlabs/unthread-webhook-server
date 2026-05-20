@@ -25,7 +25,7 @@ These outstanding organizations partner with us to support our open-source work:
 
 ## 🚀 Quick Start
 
-**Requirements**: Node.js 22+, Redis, Bun
+**Requirements**: Node.js 22, 24, or 26 (default runtime: Node.js 26), Redis, Bun 1.3.13
 
 ```bash
 # 1. Install dependencies
@@ -152,9 +152,9 @@ docker-compose down
 
 ## 🏗️ Development Container
 
-Dev container with Node.js 22.16, Bun, and essential VS Code extensions (Copilot, ESLint, Docker, GitLens).
+Recommended local toolchain is Node.js 26 and Bun 1.3.13. Node.js 22 and 24 are also supported for source/runtime compatibility.
 
-**Quick Start:** Open in VS Code → Click "Reopen in Container" → Start coding
+**Quick Start:** Install dependencies with `bun install` and start coding
 
 ## ⚙️ Configuration
 

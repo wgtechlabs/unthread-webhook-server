@@ -67,6 +67,10 @@ jobs:
       - name: Build TypeScript
         run: bun run build
 
+      - name: Node.js runtime smoke check
+        run: |
+          node -e "const { generateUnthreadSignature, verifyUnthreadSignature } = require('./dist/utils/signature.js'); const payload = '{\"event\":\"message\"}'; const secret = 'ci-secret'; const signature = generateUnthreadSignature(payload, secret); const req = { headers: { 'x-unthread-signature': signature }, body: JSON.parse(payload), webhookTimestamp: Date.now() }; if (!verifyUnthreadSignature(req, secret)) { throw new Error('Node runtime smoke check failed'); } console.log('Node runtime smoke check passed on', process.version);"
+
       - name: Test Docker build (no push)
         run: |
           echo "Testing Docker build..."

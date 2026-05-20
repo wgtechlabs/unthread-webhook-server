@@ -152,9 +152,9 @@ docker-compose down
 
 ## 🏗️ Development Container
 
-Dev container with Node.js 26, Bun 1.3.13, and essential VS Code extensions (Copilot, ESLint, Docker, GitLens). Node.js 22 and 24 are also supported for source/runtime compatibility.
+Recommended local toolchain is Node.js 26 and Bun 1.3.13. Node.js 22 and 24 are also supported for source/runtime compatibility.
 
-**Quick Start:** Open in VS Code → Click "Reopen in Container" → Start coding
+**Quick Start:** Install dependencies with `bun install` and start coding
 
 ## ⚙️ Configuration
 

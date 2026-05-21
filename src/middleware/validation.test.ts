@@ -11,9 +11,9 @@ const runMiddleware = async (body: Record<string, unknown>) => {
         json: (payload: unknown) => {
           state.body = payload;
           return payload;
-        }
+        },
       };
-    }
+    },
   } as any;
 
   const validationChains = validateEvent.slice(0, -1);
@@ -38,7 +38,7 @@ describe('validateEvent middleware chain', () => {
       event: 'message_created',
       eventId: 'evt-1',
       eventTimestamp: Date.now(),
-      webhookTimestamp: Date.now()
+      webhookTimestamp: Date.now(),
     });
     expect(state.status).toBeUndefined();
     expect(state.nextCalled).toBe(true);
@@ -48,7 +48,7 @@ describe('validateEvent middleware chain', () => {
     const state = await runMiddleware({
       eventId: 'evt-1',
       eventTimestamp: Date.now(),
-      webhookTimestamp: Date.now()
+      webhookTimestamp: Date.now(),
     });
     expect(state.status).toBe(400);
   });
@@ -57,7 +57,7 @@ describe('validateEvent middleware chain', () => {
     const state = await runMiddleware({
       event: 'message_created',
       eventTimestamp: Date.now(),
-      webhookTimestamp: Date.now()
+      webhookTimestamp: Date.now(),
     });
     expect(state.status).toBe(400);
   });
@@ -66,7 +66,7 @@ describe('validateEvent middleware chain', () => {
     const state = await runMiddleware({
       event: 'message_created',
       eventId: 'evt-1',
-      webhookTimestamp: Date.now()
+      webhookTimestamp: Date.now(),
     });
     expect(state.status).toBe(400);
   });
@@ -75,7 +75,7 @@ describe('validateEvent middleware chain', () => {
     const state = await runMiddleware({
       event: 'message_created',
       eventId: 'evt-1',
-      eventTimestamp: Date.now()
+      eventTimestamp: Date.now(),
     });
     expect(state.status).toBe(400);
   });

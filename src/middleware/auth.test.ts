@@ -1,6 +1,14 @@
-import { createHmac } from 'crypto';
-import { beforeAll, beforeEach, describe, expect, it, mock, spyOn } from 'bun:test';
+import {
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  mock,
+  spyOn,
+} from 'bun:test';
 import { LogEngine } from '@wgtechlabs/log-engine';
+import { createHmac } from 'crypto';
 
 process.env.TARGET_PLATFORM = 'whatsapp';
 process.env.REDIS_URL = 'redis://localhost:6379';
@@ -27,14 +35,17 @@ const createRes = () => {
           json: (body: unknown) => {
             state.body = body;
             return body;
-          }
+          },
         };
-      }
-    }
+      },
+    },
   };
 };
 
-const sign = (rawBody: string) => createHmac('sha256', config.unthreadWebhookSecret).update(rawBody).digest('hex');
+const sign = (rawBody: string) =>
+  createHmac('sha256', config.unthreadWebhookSecret)
+    .update(rawBody)
+    .digest('hex');
 
 describe('verifySignature middleware', () => {
   let warnSpy: ReturnType<typeof spyOn>;
@@ -60,7 +71,11 @@ describe('verifySignature middleware', () => {
   it('rejects missing raw body', () => {
     const { state, res } = createRes();
     const next = mock(() => undefined);
-    verifySignature({ headers: { 'x-unthread-signature': '00' }, body: {} } as any, res as any, next as any);
+    verifySignature(
+      { headers: { 'x-unthread-signature': '00' }, body: {} } as any,
+      res as any,
+      next as any,
+    );
     expect(state.status).toBe(400);
     expect((state.body as any).error).toBe('Missing request body');
     expect(next).not.toHaveBeenCalled();
@@ -70,9 +85,13 @@ describe('verifySignature middleware', () => {
     const { state, res } = createRes();
     const next = mock(() => undefined);
     verifySignature(
-      { headers: { 'x-unthread-signature': 'zzzz' }, body: { webhookTimestamp: Date.now() }, rawBody: '{"ok":true}' } as any,
+      {
+        headers: { 'x-unthread-signature': 'zzzz' },
+        body: { webhookTimestamp: Date.now() },
+        rawBody: '{"ok":true}',
+      } as any,
       res as any,
-      next as any
+      next as any,
     );
     expect(state.status).toBe(403);
     expect((state.body as any).error).toBe('Invalid signature');
@@ -87,24 +106,24 @@ describe('verifySignature middleware', () => {
       {
         headers: { 'x-unthread-signature': sign(rawBody) },
         body: { eventId: 'evt-1', webhookTimestamp: Date.now() },
-        rawBody
+        rawBody,
       } as any,
       res as any,
-      next as any
+      next as any,
     );
     expect(state.status).toBeUndefined();
     expect(next).toHaveBeenCalled();
     expect(warnSpy).not.toHaveBeenCalledWith(
       'Webhook rejected - stale timestamp',
-      expect.anything()
+      expect.anything(),
     );
     expect(warnSpy).not.toHaveBeenCalledWith(
       'Webhook skew exceeds window (observe-only, not rejected)',
-      expect.anything()
+      expect.anything(),
     );
     expect(debugSpy).toHaveBeenCalledWith(
       'Webhook timestamp within skew window',
-      expect.objectContaining({ eventId: 'evt-1', maxSkewSeconds: 300 })
+      expect.objectContaining({ eventId: 'evt-1', maxSkewSeconds: 300 }),
     );
   });
 
@@ -116,16 +135,20 @@ describe('verifySignature middleware', () => {
       {
         headers: { 'x-unthread-signature': sign(rawBody) },
         body: { eventId: 'evt-2', webhookTimestamp: Date.now() - 1_000_000 },
-        rawBody
+        rawBody,
       } as any,
       res as any,
-      next as any
+      next as any,
     );
     expect(state.status).toBe(403);
     expect((state.body as any).error).toBe('Stale webhook timestamp');
     expect(warnSpy).toHaveBeenCalledWith(
       'Webhook rejected - stale timestamp',
-      expect.objectContaining({ eventId: 'evt-2', enforce: true, maxSkewSeconds: 300 })
+      expect.objectContaining({
+        eventId: 'evt-2',
+        enforce: true,
+        maxSkewSeconds: 300,
+      }),
     );
     expect(next).not.toHaveBeenCalled();
   });
@@ -139,15 +162,19 @@ describe('verifySignature middleware', () => {
       {
         headers: { 'x-unthread-signature': sign(rawBody) },
         body: { eventId: 'evt-3', webhookTimestamp: Date.now() - 1_000_000 },
-        rawBody
+        rawBody,
       } as any,
       res as any,
-      next as any
+      next as any,
     );
     expect(state.status).toBeUndefined();
     expect(warnSpy).toHaveBeenCalledWith(
       'Webhook skew exceeds window (observe-only, not rejected)',
-      expect.objectContaining({ eventId: 'evt-3', enforce: false, maxSkewSeconds: 300 })
+      expect.objectContaining({
+        eventId: 'evt-3',
+        enforce: false,
+        maxSkewSeconds: 300,
+      }),
     );
     expect(next).toHaveBeenCalled();
   });
@@ -160,10 +187,10 @@ describe('verifySignature middleware', () => {
       {
         headers: { 'x-unthread-signature': sign(rawBody) },
         body: { eventId: 'evt-4' },
-        rawBody
+        rawBody,
       } as any,
       res as any,
-      next as any
+      next as any,
     );
     expect(state.status).toBe(403);
     expect((state.body as any).error).toBe('Stale webhook timestamp');

@@ -19,38 +19,67 @@ If you can write code then create a pull request to this repo and I will review 
 To get started with development:
 
 1. **Fork and clone the repository**
+
    ```bash
    git clone https://github.com/your-username/unthread-webhook-server.git
    cd unthread-webhook-server
    ```
 
 2. **Install dependencies**
+
    ```bash
    bun install
    ```
+
    > ⚠️ **Important**: This project currently uses Bun as the package manager.
 
-3. **Set up environment variables**
+3. **Install contribute-now (recommended)**
+
+   ```bash
+   bunx contribute-now setup
+   ```
+
+   > 📝 **About contribute-now**: This project uses [contribute-now](https://github.com/warengonzaga/contribute-now) to automate and standardize the git workflow. It helps enforce the Clean Flow workflow and Clean Commit conventions. You can also install it globally with `bun install -g contribute-now` or use `cn` alias for convenience.
+
+4. **Install GitHub CLI (optional but recommended)**
+
+   ```bash
+   # macOS
+   brew install gh
+
+   # Windows
+   choco install gh
+
+   # Linux
+   apt-get install gh
+   ```
+
+   > 📝 **About GitHub CLI**: Required for full `contribute-now` functionality, especially for PR creation and role detection.
+
+5. **Set up environment variables**
    - Copy `.env.example` to `.env`
    - Fill in the required information as described in the README
+
    ```bash
    cp .env.example .env
    ```
 
-4. **Start Redis**
+6. **Start Redis**
+
    ```bash
    # Choose one option based on your setup
    redis-server                          # Local installation
    brew services start redis             # macOS
    sudo systemctl start redis-server     # Linux
    docker run -d -p 6379:6379 redis:alpine  # Docker
-   
+
    # OR for full Docker setup with proper naming:
    docker network create unthread-integration-network
    docker-compose up -d redis-webhook
    ```
 
-5. **Start the project in development mode**
+7. **Start the project in development mode**
+
    ```bash
    bun run dev
    ```
@@ -89,7 +118,7 @@ bun run test:coverage       # Generate coverage report
 
 #### 🏛️ Project Structure
 
-```
+```text
 src/
 ├── app.ts              # Main application entry point
 ├── config/             # Configuration files
@@ -117,9 +146,10 @@ src/
 - **Error Handling**: Implement comprehensive error handling with detailed logging
 - **Package Manager**: Use Bun for dependency management and project scripts
 - **Code Style**: Follow existing patterns and maintain consistency
-- **Environment**: Use Node.js 22+ for development
+- **Environment**: Use Node.js 26 as default runtime (Node.js 22, 24, and 26 are supported)
 - **Redis Integration**: Ensure Redis connectivity for all webhook-related features
 - **Webhook Integration**: Ensure compatibility with [`wgtechlabs/unthread-telegram-bot`](https://github.com/wgtechlabs/unthread-telegram-bot)
+- **Architecture**: Remember this server is **one per platform**. Each instance has a single `TARGET_PLATFORM` (discord, telegram, whatsapp, etc.) and routes events to that platform's Redis queue. Do not add multi-platform routing logic to a single server instance.
 
 #### 🔍 Code Quality and Linting
 
@@ -152,6 +182,7 @@ bun run lint:ci
 **Comprehensive ESLint Configuration:**
 
 This project uses a modern flat config format (`eslint.config.js`) with the following capabilities:
+
 - **TypeScript-first**: Full TypeScript-ESLint integration with strict type checking
 - **Security-focused**: Multiple security plugins working together to prevent vulnerabilities
 - **Customizable**: Tailored rules for webhook server security requirements
@@ -195,6 +226,7 @@ const data: any = response;
 This project uses [Bun's built-in test runner](https://bun.com/docs/cli/test) (`bun:test`) for automated testing. When contributing:
 
 **Automated Testing:**
+
 - Write tests for new features and bug fixes
 - Ensure all tests pass: `bun run test`
 - Maintain minimum 80% code coverage: `bun run test:coverage`
@@ -202,6 +234,7 @@ This project uses [Bun's built-in test runner](https://bun.com/docs/cli/test) (`
 - Use `bun run test:watch` for development
 
 **Manual Testing:**
+
 - Test your changes using tools like ngrok for webhook testing
 - Verify Redis connectivity and queue operations
 - Test HMAC signature verification with valid Unthread events
@@ -233,6 +266,7 @@ This project uses [Bun's built-in test runner](https://bun.com/docs/cli/test) (`
 ### 📖 Documentation
 
 Improvements to documentation are always welcome! This includes:
+
 - README updates
 - Code comments
 - API documentation
@@ -245,6 +279,7 @@ Improvements to documentation are always welcome! This includes:
 For any security bugs or issues, please create a private security advisory through GitHub's security advisory feature.
 
 For other bugs, please create an issue with:
+
 - Clear description of the problem
 - Steps to reproduce
 - Expected vs actual behavior
@@ -285,22 +320,22 @@ This project uses [`@wgtechlabs/log-engine`](https://github.com/wgtechlabs/log-e
 **Custom Enterprise Protection:**
 
 ```javascript
-import { LogEngine } from '@wgtechlabs/log-engine';
+import { LogEngine } from "@wgtechlabs/log-engine";
 
 // Add custom patterns for enterprise-specific data
 LogEngine.addCustomRedactionPatterns([
-  /internal.*/i,        // Matches any field starting with "internal"
-  /company.*/i,         // Matches any field starting with "company"
-  /webhook.*/i,         // Matches webhook-specific fields
-  /unthread.*/i         // Matches unthread-specific fields
+  /internal.*/i, // Matches any field starting with "internal"
+  /company.*/i, // Matches any field starting with "company"
+  /webhook.*/i, // Matches webhook-specific fields
+  /unthread.*/i, // Matches unthread-specific fields
 ]);
 
 // Add dynamic sensitive field names
 LogEngine.addSensitiveFields([
-  'webhookSecret', 
-  'unthreadWebhookSecret', 
-  'unthreadApiKey',
-  'redisPassword'
+  "webhookSecret",
+  "unthreadWebhookSecret",
+  "unthreadApiKey",
+  "redisPassword",
 ]);
 ```
 
@@ -308,27 +343,29 @@ LogEngine.addSensitiveFields([
 
 ```javascript
 // ✅ Automatic protection - no configuration needed
-LogEngine.info('Webhook authentication', {
-  webhookId: '123456789',          // ✅ Visible
-  webhookSecret: 'secret123',      // ❌ [REDACTED]
-  targetPlatform: 'telegram',      // ✅ Visible
-  unthreadApiKey: 'key_123'        // ❌ [REDACTED]
+LogEngine.info("Webhook authentication", {
+  webhookId: "123456789", // ✅ Visible
+  webhookSecret: "secret123", // ❌ [REDACTED]
+  targetPlatform: "telegram", // ✅ Visible
+  unthreadApiKey: "key_123", // ❌ [REDACTED]
 });
 
 // ✅ Event processing protection
-LogEngine.info('Event processing', {
-  eventType: 'message_created',     // ✅ Visible
-  eventId: 'evt_001',              // ✅ Visible
-  signature: 'sha256=...',         // ❌ [REDACTED]
-  payload: { /* large data */ }    // Automatically truncated
+LogEngine.info("Event processing", {
+  eventType: "message_created", // ✅ Visible
+  eventId: "evt_001", // ✅ Visible
+  signature: "sha256=...", // ❌ [REDACTED]
+  payload: {
+    /* large data */
+  }, // Automatically truncated
 });
 
 // ✅ Redis queue security
-LogEngine.info('Queue publishing', {
-  queueName: 'unthread-events',    // ✅ Visible
-  platform: 'unthread',           // ✅ Visible
-  redisUrl: 'redis://localhost',  // ❌ [REDACTED]
-  eventCount: 5                    // ✅ Visible
+LogEngine.info("Queue publishing", {
+  queueName: "unthread-events", // ✅ Visible
+  platform: "unthread", // ✅ Visible
+  redisUrl: "redis://localhost", // ❌ [REDACTED]
+  eventCount: 5, // ✅ Visible
 });
 ```
 
@@ -370,16 +407,16 @@ LOG_TRUNCATION_TEXT="... [CONFIDENTIAL_TRUNCATED]"
 
 ```javascript
 // ⚠️ Use with caution - bypasses all redaction
-LogEngine.debugRaw('Full webhook payload', {
-  password: 'visible',          // ⚠️ Visible (not redacted)
-  apiKey: 'full-key-visible'    // ⚠️ Visible (not redacted)
+LogEngine.debugRaw("Full webhook payload", {
+  password: "visible", // ⚠️ Visible (not redacted)
+  apiKey: "full-key-visible", // ⚠️ Visible (not redacted)
 });
 
 // Temporary redaction bypass
-LogEngine.withoutRedaction().info('Debug mode', sensitiveData);
+LogEngine.withoutRedaction().info("Debug mode", sensitiveData);
 
 // Test field redaction
-const isRedacted = LogEngine.testFieldRedaction('webhookSecret'); // true
+const isRedacted = LogEngine.testFieldRedaction("webhookSecret"); // true
 const currentConfig = LogEngine.getRedactionConfig();
 ```
 

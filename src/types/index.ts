@@ -5,7 +5,7 @@
 import { Request } from 'express';
 
 // Unthread webhook event types
-export type UnthreadEventType = 
+export type UnthreadEventType =
   | 'url_verification'
   | 'conversation_created'
   | 'conversation_updated'
@@ -29,7 +29,10 @@ export interface UrlVerificationEvent extends UnthreadWebhookEvent {
 
 // Conversation events
 export interface ConversationEvent extends UnthreadWebhookEvent {
-  event: 'conversation_created' | 'conversation_updated' | 'conversation_deleted';
+  event:
+    | 'conversation_created'
+    | 'conversation_updated'
+    | 'conversation_deleted';
   data: {
     id: string;
     title?: string;
@@ -60,11 +63,15 @@ export interface MessageEvent extends UnthreadWebhookEvent {
 export type PlatformSource = string;
 
 // Union type for all webhook events
-export type WebhookEvent = UrlVerificationEvent | ConversationEvent | MessageEvent;
+export type WebhookEvent =
+  | UrlVerificationEvent
+  | ConversationEvent
+  | MessageEvent;
 
 // Extended Express Request with webhook-specific properties
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface WebhookRequest extends Request<any, any, UnthreadWebhookEvent> {
+export interface WebhookRequest
+  extends Request<any, any, UnthreadWebhookEvent> {
   rawBody: string;
 }
 

@@ -1,8 +1,7 @@
 {
   "recommendations": [
-    "dbaeumer.vscode-eslint",
-    "vitest.explorer",
-    "bierner.markdown-preview-github-styles", 
+    "biomejs.biome",
+    "bierner.markdown-preview-github-styles",
     "bierner.github-markdown-preview",
     "bierner.markdown-shiki",
     "bierner.color-info",

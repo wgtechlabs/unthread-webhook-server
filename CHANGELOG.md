@@ -8,6 +8,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.4] - 2026-05-21
+
+### Changed
+
+- align Node.js runtime policy to 22/24/26 with default runtime on 26 (#75)
+- bump @biomejs/biome in the minor-and-patch group (#74)
+- bump actions/cache from 4 to 5 (#73)
+- remove push and pull_request triggers from CI workflows
+- grant additional permissions for container workflow (#72)
+- inherit repository secrets
+- bump container-build-flow-action to v1.8.1 and normalise spacing
+- add one‑server‑per‑platform guidance and improve tables
+- add contribute-now setup and CLI instructions
+- configure checkout to fetch full history
+- add gitleaks license env var
+- use bunx biome for lint and compact biome config arrays
+- update ci, add security scans, adopt biome, refactor webhook service
+- bump @typescript-eslint packages to 8.59.1
+- bump wgtechlabs/container-build-flow-action from 1.7.1 to 1.8.0 (#69)
+- bump the minor-and-patch group with 3 updates (#70)
+
+### Removed
+
+- remove contributor rc file
+
 ## [1.1.3] - 2026-05-03
 
 ### Security

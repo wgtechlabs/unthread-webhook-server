@@ -52,7 +52,7 @@ FROM base AS bun-base
 ARG BUN_VERSION
 
 # Install Bun for dependency management
-RUN npm install --global bun@${BUN_VERSION}
+RUN npm install --global --allow-scripts=bun bun@${BUN_VERSION}
 
 # =============================================================================
 # STAGE 2: Production Dependencies

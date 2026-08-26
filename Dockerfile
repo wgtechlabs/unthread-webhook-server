@@ -33,10 +33,12 @@ ARG RAILWAY_SERVICE_ID
 # Alpine Linux 3.23 base for minimal image size with latest security updates
 FROM node:${NODE_VERSION} AS base
 
-# Install security updates for Alpine packages
+# Install security updates for Alpine packages and upgrade npm to patch
+# bundled dependency vulnerabilities (CVE-2026-45149, CVE-2026-42338)
 RUN apk update && apk upgrade && \
     apk add --no-cache dumb-init && \
-    rm -rf /var/cache/apk/*
+    rm -rf /var/cache/apk/* && \
+    npm install --global npm@latest
 
 # Set working directory for all subsequent stages
 WORKDIR /usr/src/app

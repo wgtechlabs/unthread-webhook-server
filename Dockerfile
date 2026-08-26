@@ -93,6 +93,9 @@ RUN node -e "const p=require('./package.json');delete p.devDependencies;process.
 # Minimal production image with only necessary files
 FROM base AS final
 
+# Remove build-only npm tooling and its transitive dependencies from the runtime image.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 # Set production environment with security options
 ENV NODE_ENV=production \
     NODE_OPTIONS="--enable-source-maps --max-old-space-size=512"

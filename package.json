@@ -41,7 +41,7 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-validator": "^7.3.2",
-    "redis": "^5.12.1"
+    "redis": "^6.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",

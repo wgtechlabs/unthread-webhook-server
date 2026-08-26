@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.5] - 2026-08-26
+
+### Changed
+
+- allow Bun install scripts in Docker builds
+- sync Bun lockfile with dependency updates
+- sync bun lockfile with redis 6 and biome 2.4.16
+- bump wgtechlabs/container-build-flow-action from 1.8.1 to 1.9.0 (#82)
+- bump actions/setup-node from 6 to 7 (#81)
+- bump actions/cache from 5 to 6 (#80)
+- bump actions/checkout from 6 to 7 (#79)
+- bump redis from 5.12.1 to 6.0.0 (#78)
+- bump @biomejs/biome in the minor-and-patch group (#77)
+- bump gitleaks/gitleaks-action from 2.3.9 to 3.0.0 (#76)
+
+### Security
+
+- remove vulnerable build tooling from runtime image
+- upgrade npm in Docker base stage to fix CVE-2026-45149 and CVE-2026-42338 (#83)
+
 ## [1.1.4] - 2026-05-21
 
 ### Changed

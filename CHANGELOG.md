@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.6] - 2026-08-27
+
+### Changed
+
+- unify CI, release, and container into build-flow (#85)
+
+### Security
+
+- harden project-sync trigger and field id handling
+
 ## [1.1.5] - 2026-08-26
 
 ### Changed

@@ -1,0 +1,182 @@
+name: Project Sync
+
+# Automatically tracks every pull request (opened by a human, Copilot, or any
+# other coding agent) on the "Unthread Partnership" org project board
+# (https://github.com/orgs/wgtechlabs/projects/7), and fills in Status,
+# Priority, and Effort so nothing has to be triaged onto the board by hand.
+#
+# Uses the org-level `GH_PAT` secret (inherited via `secrets: inherit` in
+# other workflows in this repo), which has been granted Organization
+# Projects: Read and write. `GITHUB_TOKEN` cannot be used here — org-level
+# Projects v2 requires a PAT. Until `GH_PAT` has that permission, the
+# workflow logs a warning and skips, so pull request checks stay green
+# instead of failing on unconfigured automation.
+
+# `pull_request_target` (not `pull_request`) so the workflow definition always
+# comes from the base branch: this job holds an org-level PAT, and a
+# `pull_request` trigger would let a same-repo PR author rewrite these steps and
+# run arbitrary commands with it. Nothing here checks out or executes PR code —
+# only PR metadata is read — so the usual `pull_request_target` risk does not
+# apply.
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  PROJECT_OWNER: wgtechlabs
+  PROJECT_NUMBER: 7
+
+jobs:
+  sync-project:
+    name: Add PR to Unthread Partnership project
+    runs-on: ubuntu-latest
+    # Skip drafts and routine dependency-bump bots (Dependabot, Renovate) —
+    # this board tracks partnership deliverables, not routine dependency PRs.
+    # Coding-agent bots (e.g. copilot-swe-agent[bot]) open real deliverables
+    # (security/code-scanning fixes, features) and should still be tracked.
+    # Fork PRs are skipped too: secrets are not exposed to them, so the sync
+    # could never run and would only add noise for external contributors.
+    if: >-
+      ${{ github.event.pull_request.head.repo.full_name == github.repository
+      && !github.event.pull_request.draft
+      && !contains(fromJSON('["dependabot[bot]", "renovate[bot]"]'), github.event.pull_request.user.login) }}
+    env:
+      GH_TOKEN: ${{ secrets.GH_PAT }}
+      PR_URL: ${{ github.event.pull_request.html_url }}
+      PR_TITLE: ${{ github.event.pull_request.title }}
+      PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+      ADDITIONS: ${{ github.event.pull_request.additions }}
+      DELETIONS: ${{ github.event.pull_request.deletions }}
+      CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+    steps:
+      # Board sync is optional automation, so an unconfigured secret warns and
+      # skips the remaining steps rather than failing the pull request's checks.
+      - name: Warn on missing PAT
+        if: ${{ env.GH_TOKEN == '' }}
+        run: |
+          echo "::warning::GH_PAT secret is not set or lacks org Projects read/write permission — skipping project sync. See the setup notes in this workflow file."
+
+      - name: Add pull request to project
+        id: add
+        if: ${{ env.GH_TOKEN != '' }}
+        run: |
+          # item-add is not idempotent: on a reopened / ready_for_review run the
+          # PR may already be on the board, so fall back to looking the item up.
+          if item_json=$(gh project item-add "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --url "$PR_URL" --format json); then
+            item_id=$(echo "$item_json" | jq -r '.id // empty')
+          else
+            item_id=$(gh project item-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --limit 1000 --format json \
+              | jq -r --arg url "$PR_URL" 'first(.items[] | select(.content.url == $url) | .id) // empty')
+          fi
+
+          if [ -z "$item_id" ]; then
+            echo "::warning::Could not add or locate $PR_URL on project $PROJECT_NUMBER — skipping field updates."
+          fi
+
+          echo "item_id=$item_id" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve project and field ids
+        id: ids
+        if: ${{ env.GH_TOKEN != '' }}
+        run: |
+          # `first(...) // empty` so a missing field/option yields an empty output
+          # instead of the literal string "null", which would be passed on to
+          # `gh project item-edit` as an invalid id.
+          project_id=$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --jq '.id // empty')
+          fields_json=$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json)
+
+          {
+            echo "project_id=$project_id"
+            echo "status_field_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Status") | .id) // empty')"
+            echo "priority_field_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Priority") | .id) // empty')"
+            echo "effort_field_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Effort") | .id) // empty')"
+            echo "status_option_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Status") | .options[] | select(.name=="In Review") | .id) // empty')"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Determine priority
+        id: priority
+        if: ${{ env.GH_TOKEN != '' }}
+        run: |
+          # Default priority, refined by Clean Commit type prefix and labels.
+          priority="P2 - Medium"
+
+          case "$PR_TITLE" in
+            "🔒 security"*) priority="P0 - Critical" ;;
+            "🚀 release"*|"📦 new"*) priority="P1 - High" ;;
+            "🔧 update"*) priority="P2 - Medium" ;;
+            "🗑️ remove"*|"☕ chore"*|"🧪 test"*|"📖 docs"*|"⚙️ setup"*) priority="P3 - Low" ;;
+          esac
+
+          if echo ",$PR_LABELS," | grep -qi ",security,"; then
+            priority="P0 - Critical"
+          fi
+
+          echo "priority=$priority" >> "$GITHUB_OUTPUT"
+
+      - name: Estimate effort
+        id: effort
+        if: ${{ env.GH_TOKEN != '' }}
+        run: |
+          # Rough Fibonacci estimate from diff size, per the project's effort
+          # guide (1-2 quick fix, 3 standard, 5 significant, 8 major, 13 large).
+          # This is a starting point — maintainers can adjust it on the board.
+          total=$((ADDITIONS + DELETIONS))
+          effort=1
+
+          if [ "$total" -gt 400 ] || [ "$CHANGED_FILES" -gt 20 ]; then
+            effort=13
+          elif [ "$total" -gt 200 ] || [ "$CHANGED_FILES" -gt 12 ]; then
+            effort=8
+          elif [ "$total" -gt 80 ] || [ "$CHANGED_FILES" -gt 6 ]; then
+            effort=5
+          elif [ "$total" -gt 30 ] || [ "$CHANGED_FILES" -gt 3 ]; then
+            effort=3
+          elif [ "$total" -gt 10 ]; then
+            effort=2
+          fi
+
+          echo "effort=$effort" >> "$GITHUB_OUTPUT"
+
+      - name: Set Status to In Review
+        if: >-
+          ${{ steps.add.outputs.item_id != ''
+          && steps.ids.outputs.project_id != ''
+          && steps.ids.outputs.status_field_id != ''
+          && steps.ids.outputs.status_option_id != '' }}
+        run: |
+          gh project item-edit --id "${{ steps.add.outputs.item_id }}" \
+            --project-id "${{ steps.ids.outputs.project_id }}" \
+            --field-id "${{ steps.ids.outputs.status_field_id }}" \
+            --single-select-option-id "${{ steps.ids.outputs.status_option_id }}"
+
+      - name: Set Priority
+        if: >-
+          ${{ steps.add.outputs.item_id != ''
+          && steps.ids.outputs.project_id != ''
+          && steps.ids.outputs.priority_field_id != '' }}
+        env:
+          PRIORITY_VALUE: ${{ steps.priority.outputs.priority }}
+        run: |
+          fields_json=$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json)
+          option_id=$(echo "$fields_json" | jq -r --arg p "$PRIORITY_VALUE" 'first(.fields[] | select(.name=="Priority") | .options[] | select(.name==$p) | .id) // empty')
+          if [ -n "$option_id" ]; then
+            gh project item-edit --id "${{ steps.add.outputs.item_id }}" \
+              --project-id "${{ steps.ids.outputs.project_id }}" \
+              --field-id "${{ steps.ids.outputs.priority_field_id }}" \
+              --single-select-option-id "$option_id"
+          fi
+
+      - name: Set Effort
+        if: >-
+          ${{ steps.add.outputs.item_id != ''
+          && steps.ids.outputs.project_id != ''
+          && steps.ids.outputs.effort_field_id != '' }}
+        run: |
+          gh project item-edit --id "${{ steps.add.outputs.item_id }}" \
+            --project-id "${{ steps.ids.outputs.project_id }}" \
+            --field-id "${{ steps.ids.outputs.effort_field_id }}" \
+            --number "${{ steps.effort.outputs.effort }}"

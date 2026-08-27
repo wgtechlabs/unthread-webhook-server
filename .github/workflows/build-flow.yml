@@ -43,8 +43,10 @@ jobs:
       ci-build-command: bun run build
       # CI_MATRIX_VERSION is exported by the called CI workflow for each matrix
       # entry, so the smoke build validates the Node version actually under test.
+      # The alpine3.23 suffix must stay in sync with the Dockerfile's
+      # `ARG NODE_VERSION` so CI exercises the same Alpine base as the published image.
       ci-docker-smoke-command: |
-        docker build --build-arg NODE_VERSION="${CI_MATRIX_VERSION}-alpine" -t test-build .
+        docker build --build-arg NODE_VERSION="${CI_MATRIX_VERSION}-alpine3.23" -t test-build .
         docker image rm test-build
       ci-matrix-versions: '["22","24","26"]'
       codeql-build-mode: none

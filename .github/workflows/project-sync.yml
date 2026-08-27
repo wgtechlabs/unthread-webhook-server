@@ -12,8 +12,14 @@ name: Project Sync
 # workflow logs a warning and skips, so pull request checks stay green
 # instead of failing on unconfigured automation.
 
+# `pull_request_target` (not `pull_request`) so the workflow definition always
+# comes from the base branch: this job holds an org-level PAT, and a
+# `pull_request` trigger would let a same-repo PR author rewrite these steps and
+# run arbitrary commands with it. Nothing here checks out or executes PR code —
+# only PR metadata is read — so the usual `pull_request_target` risk does not
+# apply.
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, ready_for_review]
 
 permissions:
@@ -77,15 +83,18 @@ jobs:
         id: ids
         if: ${{ env.GH_TOKEN != '' }}
         run: |
-          project_id=$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --jq '.id')
+          # `first(...) // empty` so a missing field/option yields an empty output
+          # instead of the literal string "null", which would be passed on to
+          # `gh project item-edit` as an invalid id.
+          project_id=$(gh project view "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json --jq '.id // empty')
           fields_json=$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json)
 
           {
             echo "project_id=$project_id"
-            echo "status_field_id=$(echo "$fields_json" | jq -r '.fields[] | select(.name=="Status") | .id')"
-            echo "priority_field_id=$(echo "$fields_json" | jq -r '.fields[] | select(.name=="Priority") | .id')"
-            echo "effort_field_id=$(echo "$fields_json" | jq -r '.fields[] | select(.name=="Effort") | .id')"
-            echo "status_option_id=$(echo "$fields_json" | jq -r '.fields[] | select(.name=="Status") | .options[] | select(.name=="In Review") | .id')"
+            echo "status_field_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Status") | .id) // empty')"
+            echo "priority_field_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Priority") | .id) // empty')"
+            echo "effort_field_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Effort") | .id) // empty')"
+            echo "status_option_id=$(echo "$fields_json" | jq -r 'first(.fields[] | select(.name=="Status") | .options[] | select(.name=="In Review") | .id) // empty')"
           } >> "$GITHUB_OUTPUT"
 
       - name: Determine priority
@@ -133,7 +142,11 @@ jobs:
           echo "effort=$effort" >> "$GITHUB_OUTPUT"
 
       - name: Set Status to In Review
-        if: ${{ steps.add.outputs.item_id != '' && steps.ids.outputs.status_option_id != '' }}
+        if: >-
+          ${{ steps.add.outputs.item_id != ''
+          && steps.ids.outputs.project_id != ''
+          && steps.ids.outputs.status_field_id != ''
+          && steps.ids.outputs.status_option_id != '' }}
         run: |
           gh project item-edit --id "${{ steps.add.outputs.item_id }}" \
             --project-id "${{ steps.ids.outputs.project_id }}" \
@@ -141,12 +154,15 @@ jobs:
             --single-select-option-id "${{ steps.ids.outputs.status_option_id }}"
 
       - name: Set Priority
-        if: ${{ steps.add.outputs.item_id != '' }}
+        if: >-
+          ${{ steps.add.outputs.item_id != ''
+          && steps.ids.outputs.project_id != ''
+          && steps.ids.outputs.priority_field_id != '' }}
         env:
           PRIORITY_VALUE: ${{ steps.priority.outputs.priority }}
         run: |
           fields_json=$(gh project field-list "$PROJECT_NUMBER" --owner "$PROJECT_OWNER" --format json)
-          option_id=$(echo "$fields_json" | jq -r --arg p "$PRIORITY_VALUE" '.fields[] | select(.name=="Priority") | .options[] | select(.name==$p) | .id')
+          option_id=$(echo "$fields_json" | jq -r --arg p "$PRIORITY_VALUE" 'first(.fields[] | select(.name=="Priority") | .options[] | select(.name==$p) | .id) // empty')
           if [ -n "$option_id" ]; then
             gh project item-edit --id "${{ steps.add.outputs.item_id }}" \
               --project-id "${{ steps.ids.outputs.project_id }}" \
@@ -155,7 +171,10 @@ jobs:
           fi
 
       - name: Set Effort
-        if: ${{ steps.add.outputs.item_id != '' }}
+        if: >-
+          ${{ steps.add.outputs.item_id != ''
+          && steps.ids.outputs.project_id != ''
+          && steps.ids.outputs.effort_field_id != '' }}
         run: |
           gh project item-edit --id "${{ steps.add.outputs.item_id }}" \
             --project-id "${{ steps.ids.outputs.project_id }}" \

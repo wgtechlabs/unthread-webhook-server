@@ -26,20 +26,5 @@
     "exactOptionalPropertyTypes": true
   },
   "include": ["src/**/*", "src/types/**/*"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.js",
-    "**/*.test.ts",
-    "**/*.spec.ts"
-  ],
-  "ts-node": {
-    "esm": false,
-    "experimentalSpecifierResolution": "node",
-    "files": true,
-    "typeCheck": true,
-    "compilerOptions": {
-      "typeRoots": ["./node_modules/@types", "./src/types"]
-    }
-  }
+  "exclude": ["node_modules", "dist", "**/*.js", "**/*.test.ts", "**/*.spec.ts"]
 }

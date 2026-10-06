@@ -26,7 +26,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "dev": "nodemon --exec ts-node src/app.ts",
+    "dev": "nodemon --watch src --watch tsconfig.json --ext ts,json --exec \"bun run build && node dist/app.js || exit 1\"",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit",
     "lint": "biome check .",
@@ -44,13 +44,12 @@
     "redis": "^6.0.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.4.16",
+    "@biomejs/biome": "2.5.11",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.6.0",
+    "@types/node": "^26.4.0",
     "axios": "^1.15.1",
     "nodemon": "^3.1.14",
-    "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "overrides": {
     "picomatch": "4.0.4",

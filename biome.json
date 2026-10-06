@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -16,7 +16,7 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": false,
+      "preset": "none",
       "complexity": {
         "noAdjacentSpacesInRegex": "error",
         "noExtraBooleanCast": "error",
@@ -48,9 +48,7 @@
         "useValidTypeof": "error",
         "useYield": "error"
       },
-      "nursery": {
-        "useErrorCause": "error"
-      },
+      "nursery": {},
       "suspicious": {
         "noAssignInExpressions": "error",
         "noAsyncPromiseExecutor": "error",
@@ -81,6 +79,9 @@
         "noUselessRegexBackrefs": "error",
         "noWith": "error",
         "useGetterReturn": "error"
+      },
+      "style": {
+        "useErrorCause": "error"
       }
     },
     "includes": [
@@ -118,7 +119,6 @@
             "noFloatingPromises": "error",
             "noImpliedEval": "error",
             "noMisusedPromises": "error",
-            "noNestedPromises": "warn",
             "useExplicitReturnType": "off",
             "useExplicitType": "off"
           },
@@ -136,7 +136,8 @@
             "noDoubleEquals": "error",
             "noExplicitAny": "warn",
             "noImportCycles": "warn",
-            "noVar": "error"
+            "noVar": "error",
+            "noNestedPromises": "warn"
           }
         }
       }

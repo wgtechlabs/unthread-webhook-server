@@ -29,6 +29,9 @@ jobs:
     uses: wgtechlabs/build-flow-action/.github/workflows/app.yml@f8263c388160a62f4a0e72ed888e56c8e9159469 # v1.0.0
     secrets: inherit
     with:
+      # Dependabot pull requests cannot access organization secrets, including
+      # the licensed Gitleaks token. Keep the scan enabled for all other runs.
+      enable-gitleaks: ${{ github.actor != 'dependabot[bot]' }}
       ci-profile: node-bun
       ci-install-command: bun install --frozen-lockfile
       ci-lint-command: bunx biome check . --reporter=github
@@ -43,7 +46,7 @@ jobs:
       enable-container: true
       container-registry: both
       # Container tag lifecycle (owned by build flow v0.2, see docs in README):
-      # - push to main    -> staging-<sha> plus the floating staging tag
+      # - push to main    -> staging-<sha> plus the floating dev tag
       # - push to dev     -> dev-<sha> plus the floating dev tag
       # - published release -> <version>, <major>.<minor>, <major>, and latest
       # `latest` therefore only moves on releases; consumers that need the tip of

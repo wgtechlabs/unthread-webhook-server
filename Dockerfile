@@ -19,7 +19,7 @@
 # syntax=docker/dockerfile:1
 
 # Use Node.js 26 LTS Alpine with security patches
-ARG NODE_VERSION=26-alpine3.23
+ARG NODE_VERSION=26.12.1-alpine3.24
 
 # Bun version used in build stages (must match packageManager in package.json)
 ARG BUN_VERSION=1.3.13

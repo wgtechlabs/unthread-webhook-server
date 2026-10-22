@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.7] - 2026-10-22
+
+### Changed
+
+- bump wgtechlabs/build-flow-action/.github/workflows/app.yml from 0.3.1 to 1.0.0 (#94)
+- repair build flow and development startup (#93)
+- update build workflow and restore toolchain checks (#91)
+- bump @biomejs/biome in the minor-and-patch group (#87)
+- bump @types/node from 25.9.5 to 26.4.0 (#88)
+- bump typescript from 6.0.3 to 7.0.2 (#89)
+- bump wgtechlabs/build-flow-action/.github/workflows/app.yml (#90)
+
+### Security
+
+- patch dependencies and refresh runtime images (#95)
+
 ## [1.1.6] - 2026-08-27
 
 ### Changed

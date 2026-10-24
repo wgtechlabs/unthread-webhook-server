@@ -22,7 +22,7 @@
 ARG NODE_VERSION=26.12.1-alpine3.24
 
 # Bun version used in build stages (must match packageManager in package.json)
-ARG BUN_VERSION=1.3.13
+ARG BUN_VERSION=1.4.4
 
 # Get Railway service ID for cache mounts
 ARG RAILWAY_SERVICE_ID

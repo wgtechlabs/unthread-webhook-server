@@ -1,14 +1,28 @@
 # Unthread Webhook Server 🎫🛰️
 
-[![made by](https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&longCache=true&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs) [![official](https://img.shields.io/badge/official-Unthread%20Extension-FF5241.svg?logo=discord&logoColor=white&labelColor=181717&style=flat-square)](https://unthread.com) [![sponsors](https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&logo=github&logoColor=white&labelColor=181717&style=flat-square)](https://github.com/sponsors/wgtechlabs)
+<p align="center">
+  <a href="https://github.com/wgtechlabs/unthread-webhook-server"><img src="https://raw.githubusercontent.com/wgtechlabs/unthread-webhook-server/main/.github/assets/repo_banner.jpg" alt="Unthread Webhook Server repository banner"></a>
+</p>
 
-[![banner](https://raw.githubusercontent.com/wgtechlabs/unthread-webhook-server/main/.github/assets/repo_banner.jpg)](https://github.com/wgtechlabs/unthread-webhook-server)
+<p align="center">
+  <strong>Securely receive Unthread webhooks, verify signatures, and route events through Redis to platform-specific bots.</strong>
+</p>
 
-[![build flow workflow](https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/build-flow.yml?branch=dev&style=flat-square&logo=github&labelColor=181717&label=build%20flow)](https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/build-flow.yml) [![version](https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&labelColor=181717&color=green&style=flat-square&label=version)](https://github.com/wgtechlabs/unthread-webhook-server/releases) [![star](https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&color=yellow&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/stargazers) [![license](https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&logo=github&labelColor=181717&style=flat-square)](https://github.com/wgtechlabs/unthread-webhook-server/blob/main/LICENSE)
+<p align="center">
+  <a href="https://github.com/wgtechlabs"><img src="https://img.shields.io/badge/made%20by-WG%20Tech%20Labs-0060a0.svg?logo=github&amp;style=flat-square&amp;labelColor=181717" alt="Made by WG Tech Labs"></a>
+  <a href="https://unthread.com"><img src="https://img.shields.io/badge/official-Unthread%20Extension-FF5241.svg?logo=github&amp;logoColor=white&amp;labelColor=181717&amp;style=flat-square" alt="Official Unthread extension"></a>
+  <a href="https://github.com/sponsors/wgtechlabs"><img src="https://img.shields.io/badge/sponsor-%E2%9D%A4-%23db61a2.svg?&amp;logo=github&amp;logoColor=white&amp;labelColor=181717&amp;style=flat-square" alt="Sponsor WG Tech Labs"></a>
+</p>
 
-A reliable, production-ready Node.js server for processing Unthread.io webhooks with signature verification and smart platform handling. Built with TypeScript, Express.js, and Redis, this webhook server provides secure HMAC-SHA256 signature validation, intelligent event deduplication, seamless integration with multiple platforms including Discord and Telegram, and **advanced file attachment correlation** that accurately detects source platforms for file uploads. The server automatically detects event sources, processes various webhook events (conversations, messages, status updates), correlates file attachments with their originating platforms, and efficiently queues them through Redis for downstream consumption by your bot applications, ensuring reliable and scalable webhook processing for your Unthread.io integrations.
+<p align="center">
+  <a href="https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/build-flow.yml"><img src="https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/build-flow.yml?branch=main&amp;style=flat-square&amp;logo=github&amp;labelColor=181717&amp;label=release" alt="Release workflow status"></a>
+  <a href="https://github.com/wgtechlabs/unthread-webhook-server/actions/workflows/build-flow.yml"><img src="https://img.shields.io/github/actions/workflow/status/wgtechlabs/unthread-webhook-server/build-flow.yml?branch=dev&amp;style=flat-square&amp;logo=github&amp;labelColor=181717&amp;label=build" alt="Build workflow status"></a>
+  <a href="https://github.com/wgtechlabs/unthread-webhook-server/releases"><img src="https://img.shields.io/github/release/wgtechlabs/unthread-webhook-server.svg?logo=github&amp;labelColor=181717&amp;color=green&amp;style=flat-square&amp;label=version" alt="Latest release version"></a>
+  <a href="https://github.com/wgtechlabs/unthread-webhook-server/stargazers"><img src="https://img.shields.io/github/stars/wgtechlabs/unthread-webhook-server.svg?&amp;logo=github&amp;labelColor=181717&amp;color=yellow&amp;style=flat-square" alt="GitHub stars"></a>
+  <a href="https://github.com/wgtechlabs/unthread-webhook-server/blob/main/LICENSE"><img src="https://img.shields.io/github/license/wgtechlabs/unthread-webhook-server.svg?&amp;logo=github&amp;labelColor=181717&amp;style=flat-square" alt="GPL-3.0 license"></a>
+</p>
 
-## 🤗 Special Thanks
+## 💎 Sponsors & Partners
 
 ### 🤝 Partner Organizations
 
@@ -25,7 +39,7 @@ These outstanding organizations partner with us to support our open-source work:
 
 ## 🚀 Quick Start
 
-**Requirements**: Node.js 22, 24, or 26 (default runtime: Node.js 26), Redis, Bun 1.3.13
+**Requirements**: Node.js 22, 24, or 26 (default runtime: Node.js 26), Redis, Bun 1.4.4
 
 ```bash
 # 1. Install dependencies
@@ -152,7 +166,7 @@ docker-compose down
 
 ## 🏗️ Development Container
 
-Recommended local toolchain is Node.js 26 and Bun 1.3.13. Node.js 22 and 24 are also supported for source/runtime compatibility.
+Recommended local toolchain is Node.js 26 and Bun 1.4.4. Node.js 22 and 24 are also supported for source/runtime compatibility.
 
 **Quick Start:** Install dependencies with `bun install` and start coding
 
@@ -425,31 +439,11 @@ Contributions are welcome, create a pull request to this repo and I will review 
 
 When contributing, please ensure your code follows the existing TypeScript patterns and includes appropriate error handling.
 
-## 🔄 Recent Updates
+## 📚 Releases & Changelog
 
-### v1.0.0-beta.5.2 - File Attachment Intelligence
+See the [GitHub Releases](https://github.com/wgtechlabs/unthread-webhook-server/releases) for published versions and the [CHANGELOG.md](./CHANGELOG.md) for release details.
 
-**Major Enhancement**: Revolutionary file attachment correlation system that eliminates "unknown" source platforms.
-
-**New Features:**
-
-- **Smart File Correlation**: Memory-based system that links file uploads with their originating platforms
-- **Rich Attachment Metadata**: Automatic generation of file summaries for easier integration
-- **Multi-Event Buffering**: Handles multiple files per conversation with robust timeout management
-- **Enhanced Platform Detection**: Required `TARGET_PLATFORM` configuration for improved accuracy
-- **Production-Ready**: Comprehensive error handling, logging, and resource cleanup
-
-**Breaking Changes:**
-
-- `TARGET_PLATFORM` is now required (no default value)
-- Enhanced Redis queue format includes `attachments` metadata object
-
-**Migration Guide:**
-
-- Set `TARGET_PLATFORM` in your `.env` file (e.g., `telegram`, `discord`)
-- Existing integrations will continue to work - new `attachments` field is additive
-
-## 🙏 Sponsor
+## 💖 Support the Project
 
 Like this project? **Leave a star**! ⭐⭐⭐⭐⭐
 
@@ -466,7 +460,7 @@ Found this project helpful? Consider nominating me **(@warengonzaga)** for the [
 
 Licensed under [GNU General Public License v3.0](LICENSE) - ensuring modifications remain open source.
 
-## 📝 Author
+## 👥 Authors & Contributors
 
 This project is created by **[Waren Gonzaga](https://github.com/warengonzaga)** under [WG Technology Labs](https://github.com/wgtechlabs), with the help of awesome [contributors](https://github.com/wgtechlabs/unthread-webhook-server/graphs/contributors).
 
